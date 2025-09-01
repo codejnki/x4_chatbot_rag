@@ -6,13 +6,13 @@ import time
 import uuid
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
-from typing import List, Optional, Literal, Dict
+from pydantic import BaseModel
+from typing import List, Optional, Literal
 
 from rag_chain import X4RAGChain
+from langchain_core.messages import AIMessage, HumanMessage
 
 # --- Pydantic Models for OpenAI Compatibility ---
-# We'll add more specific models for the non-streaming response
 
 class ChatMessage(BaseModel):
     role: Literal["system", "user", "assistant"]
@@ -67,44 +67,53 @@ rag_pipeline = X4RAGChain()
 
 @app.post("/v1/chat/completions")
 async def chat_completions(request: ChatCompletionRequest):
-    user_query = ""
-    if request.messages:
-        last_message = request.messages[-1]
-        if last_message.role == "user":
-            user_query = last_message.content
+    if not request.messages:
+        return Response(status_code=400, content="Messages list is empty.")
 
-    if not user_query:
-        return Response(status_code=400, content="No user query found in messages.")
+    # --- History Formatting ---
+    # Convert the incoming Pydantic models into LangChain's message objects.
+    # The last message is the new user input, the rest is history.
+    user_query = request.messages[-1].content
+    chat_history = []
+    for msg in request.messages[:-1]:
+        if msg.role == "user":
+            chat_history.append(HumanMessage(content=msg.content))
+        elif msg.role == "assistant":
+            chat_history.append(AIMessage(content=msg.content))
 
     # --- DUAL MODE: Handle streaming and non-streaming requests ---
 
     if request.stream:
-        # --- Streaming Logic (existing code) ---
+        # --- Streaming Logic ---
         async def event_stream():
             stream_id = f"chatcmpl-{uuid.uuid4()}"
-            async for chunk in rag_pipeline.stream_query(user_query):
-                if chunk:
+            # The new rag_chain returns a dictionary with an "answer" key
+            async for chunk in rag_pipeline.stream_query(user_query, chat_history):
+                if answer_chunk := chunk.get("answer"):
                     response_chunk = {
                         "id": stream_id, "object": "chat.completion.chunk", "created": int(time.time()),
-                        "model": request.model, "choices": [{"index": 0, "delta": {"content": chunk}, "finish_reason": None}]
+                        "model": request.model, "choices": [{"index": 0, "delta": {"content": answer_chunk}, "finish_reason": None}]
                     }
                     yield f"data: {json.dumps(response_chunk)}\n\n"
+
+            # Send the final chunk
             final_chunk = {
                 "id": stream_id, "object": "chat.completion.chunk", "created": int(time.time()),
                 "model": request.model, "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}]
             }
             yield f"data: {json.dumps(final_chunk)}\n\n"
             yield "data: [DONE]\n\n"
-        
+
         from fastapi.responses import StreamingResponse
         return StreamingResponse(event_stream(), media_type="text/event-stream")
 
     else:
-        # --- Non-Streaming Logic (for the "Test" button) ---
+        # --- Non-Streaming Logic ---
         full_response_content = ""
-        async for chunk in rag_pipeline.stream_query(user_query):
-            full_response_content += chunk
-        
+        async for chunk in rag_pipeline.stream_query(user_query, chat_history):
+            if answer_chunk := chunk.get("answer"):
+                full_response_content += answer_chunk
+
         response = ChatCompletionResponse(
             id=f"chatcmpl-{uuid.uuid4()}",
             created=int(time.time()),
@@ -116,11 +125,10 @@ async def chat_completions(request: ChatCompletionRequest):
                     finish_reason="stop"
                 )
             ],
-            usage=UsageInfo() # We can use dummy values for usage
+            usage=UsageInfo()
         )
         return response
 
 # --- Main Entry Point ---
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8001)
-
