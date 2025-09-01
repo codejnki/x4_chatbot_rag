@@ -1,0 +1,20 @@
+--- Starting Phase 3: Retrieval and Generation ---
+Loading vector store and embedding model...
+Vector store loaded successfully.
+Initializing LLM from server at 'http://localhost:1234/v1'...
+LLM initialized.
+
+--- Running Query ---
+Question: How do I dock my ship?
+
+--- LLM Response ---
+According to the provided context, here's a step-by-step guide on how to dock your ship:
+
+1. Request permission to dock by left-clicking on the station and selecting "Request dock at" from the context menu or using Shift + D while within 6km of the station.
+2. Follow the green landing lights to the approximate docking area, being aware of any obstacles in your path.
+3. As you approach the landing pad, a faint hologram of your ship will appear superimposed over the allocated landing pad, showing the required alignment.
+4. Slowly fly towards this location, adjusting your speed, position, and alignment as needed. It may be best to try flying above the spot and then descending into it.
+
+Additionally, you can consider upgrading to a docking computer software upgrade (Mk1 or Mk2) which will assist in landing your ship by automatically aligning it with the docking bay when you're close enough.
+
+--- RAG process complete ---
