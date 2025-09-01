@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from typing import List, Optional, Literal
 
 from rag_chain import X4RAGChain
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 # --- Pydantic Models for OpenAI Compatibility ---
 
@@ -71,23 +71,26 @@ async def chat_completions(request: ChatCompletionRequest):
         return Response(status_code=400, content="Messages list is empty.")
 
     # --- History Formatting ---
-    # Convert the incoming Pydantic models into LangChain's message objects.
-    # The last message is the new user input, the rest is history.
+    # The last message is the new user query. All preceding messages are history.
     user_query = request.messages[-1].content
+    
     chat_history = []
+    # Convert all messages before the last one into LangChain message objects.
+    # This history will include any user-defined character prompts.
     for msg in request.messages[:-1]:
         if msg.role == "user":
             chat_history.append(HumanMessage(content=msg.content))
         elif msg.role == "assistant":
             chat_history.append(AIMessage(content=msg.content))
+        elif msg.role == "system":
+            # Pass system messages along as part of the history, allowing for potential client-side rule additions.
+            chat_history.append(SystemMessage(content=msg.content))
 
     # --- DUAL MODE: Handle streaming and non-streaming requests ---
-
     if request.stream:
         # --- Streaming Logic ---
         async def event_stream():
             stream_id = f"chatcmpl-{uuid.uuid4()}"
-            # The new rag_chain returns a dictionary with an "answer" key
             async for chunk in rag_pipeline.stream_query(user_query, chat_history):
                 if answer_chunk := chunk.get("answer"):
                     response_chunk = {

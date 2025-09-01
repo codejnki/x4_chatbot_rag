@@ -6,3 +6,4 @@ x4_wiki_corpus.json
 x4_wiki_chunks.json
 faiss_index
 faiss_index
+x4_entities.json
