@@ -1,20 +1,15 @@
 import json
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_text_splitters import MarkdownHeaderTextSplitter
 
 # --- Configuration ---
 INPUT_CORPUS_FILE = "x4_wiki_corpus.json"
 OUTPUT_CHUNKS_FILE = "x4_wiki_chunks.json"
 
-# Aim for chunks around 1000 characters, a good general-purpose size.
-CHUNK_SIZE = 1000 
-# Overlap helps maintain context between chunks.
-CHUNK_OVERLAP = 200
-
 # --- Main Logic ---
 def load_and_chunk_documents():
     """
     Loads the processed JSON corpus and splits the documents into
-    manageable chunks for embedding.
+    manageable chunks for embedding based on Markdown headers.
     """
     print("--- Starting Phase 2: Chunking ---")
     
@@ -28,22 +23,25 @@ def load_and_chunk_documents():
         return None
 
     # 2. Initialize the text splitter
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=CHUNK_SIZE,
-        chunk_overlap=CHUNK_OVERLAP,
-        length_function=len,
-        separators=["\n\n", "\n", " ", ""] 
-    )
+    headers_to_split_on = [
+        ("#", "Header 1"),
+        ("##", "Header 2"),
+    ]
+    markdown_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
 
     # 3. Process each document and create chunks
     all_chunks = []
     for doc in documents:
-        chunks = text_splitter.split_text(doc['content'])
-        for i, chunk_text in enumerate(chunks):
+        chunks = markdown_splitter.split_text(doc['content'])
+        for i, chunk in enumerate(chunks):
+            # Combine the page content with the headers to provide more context
+            header_content = " ".join(chunk.metadata.values())
+            combined_content = f"{header_content}\n\n{chunk.page_content}"
+
             all_chunks.append({
                 'source': doc['source'],
                 'title': doc['title'],
-                'content': chunk_text,
+                'content': combined_content,
                 'chunk_index': i + 1 
             })
             

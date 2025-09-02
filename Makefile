@@ -44,7 +44,7 @@ VENV_TIMESTAMP := $(VENV_DIR)/.installed
 # --- Main Targets ---
 .DEFAULT_GOAL := run
 
-.PHONY: data clean clean-keywords freeze help all run install
+.PHONY: data clean clean-keywords clean-venv freeze help all run install
 
 # Run the entire pipeline and start the server
 run: all
@@ -115,8 +115,7 @@ freeze: $(PIP)
 
 # Clean up the project
 clean:
-	@echo "--> Cleaning up project files (keyword cache is preserved)..."
-	-$(RM_RF) $(VENV_DIR)
+	@echo "--> Cleaning up project files (venv and keyword cache are preserved)..."
 	-$(RM_RF) $(WIKI_DIR)
 	-rm -f $(CORPUS_FILE) $(CHUNKS_FILE) $(KEYWORDS_FILE) $(REFINED_KEYWORDS_FILE)
 	-$(RM_RF) $(VECTOR_STORE_DIR)
@@ -129,6 +128,12 @@ clean-keywords:
 	@echo "--> Deleting keyword cache..."
 	-$(RM_RF) $(KEYWORDS_CACHE_DIR)
 	@echo "--> Keyword cache deleted."
+
+# Deletes the virtual environment
+clean-venv:
+	@echo "--> Deleting virtual environment..."
+	-$(RM_RF) $(VENV_DIR)
+	@echo "--> Virtual environment deleted."
 
 # Help
 help:
@@ -143,6 +148,7 @@ help:
 	@echo "  corpus            - Generates the JSON corpus from the wiki data."
 	@echo "  data              - Unzips the wiki data from $(ZIP_FILE)."
 	@echo "  freeze            - Updates requirements.txt from the current environment."
-	@echo "  clean             - Removes the venv, data, and generated files (preserves keyword cache)."
+	@echo "  clean             - Removes data and generated files (preserves venv and keyword cache)."
 	@echo "  clean-keywords    - Deletes the keyword generation cache for a full rebuild."
+	@echo "  clean-venv        - Deletes the Python virtual environment."
 	@echo "  help              - Shows this help message."

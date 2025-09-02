@@ -1,6 +1,7 @@
 # rag_chain.py (Final Version with Re-ranking and State Fix)
 
 import json
+import logging
 from pathlib import Path
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -14,6 +15,8 @@ from langchain.retrievers.document_compressors import CrossEncoderReranker
 from langchain_community.cross_encoders import HuggingFaceCrossEncoder
 from typing import AsyncGenerator, List, Dict, Optional
 from thefuzz import process, fuzz
+
+logger = logging.getLogger(__name__)
 
 class X4RAGChain:
     """
@@ -29,29 +32,29 @@ class X4RAGChain:
         if not path.exists(): raise FileNotFoundError(f"{description} file not found at '{file_path}'")
         return json.loads(path.read_text("utf-8"))
 
-    def __init__(self, vector_store_path="faiss_index", model_name="sentence-transformers/all-MiniLM-L6-v2", 
-                 prompt_path="system_prompt.txt", entities_path="x4_keywords_refined.json", 
+    def __init__(self, vector_store_path="faiss_index", model_name="sentence-transformers/all-MiniLM-L6-v2",
+                 prompt_path="system_prompt.txt", entities_path="x4_keywords_refined.json",
                  researcher_prompt_path="researcher_prompt.txt"):
-        
+
         self.base_system_prompt = self._load_text_file(prompt_path, "System prompt")
         researcher_template_str = self._load_text_file(researcher_prompt_path, "Researcher prompt")
         self.researcher_prompt_template = ChatPromptTemplate.from_template(researcher_template_str)
 
         keywords_data = self._load_json_file(entities_path, "Refined Keywords")
         self.keywords = keywords_data.get("keywords", [])
-        print(f"Loaded {len(self.keywords)} refined keywords.")
+        logger.info(f"Loaded {len(self.keywords)} refined keywords.")
 
         embeddings = HuggingFaceEmbeddings(model_name=model_name)
         base_vectorstore = FAISS.load_local(vector_store_path, embeddings, allow_dangerous_deserialization=True)
         base_retriever = base_vectorstore.as_retriever(search_kwargs={"k": 50})
-        
+
         reranker_model = HuggingFaceCrossEncoder(model_name="BAAI/bge-reranker-base")
         compressor = CrossEncoderReranker(model=reranker_model, top_n=7)
-        
+
         self.retriever = ContextualCompressionRetriever(
             base_compressor=compressor, base_retriever=base_retriever
         )
-        
+
         self.actor_model = ChatOpenAI(base_url="http://localhost:1234/v1", api_key="not-needed", temperature=0.7)
         self.researcher_model = ChatOpenAI(base_url="http://localhost:1234/v1", api_key="not-needed", temperature=0.0)
 
@@ -73,20 +76,20 @@ class X4RAGChain:
 
     async def _run_researcher_step(self, question: str, documents: List[Document]) -> Optional[str]:
         if not documents: return None
-        
+
         context_str = "\n\n---\n\n".join([f"Source: {doc.metadata.get('title', 'Unknown')}\n\n{doc.page_content}" for doc in documents])
-        
+
         research_chain = self.researcher_prompt_template | self.researcher_model
-        
-        print("--- Running Researcher Step ---")
+
+        logger.info("--- Running Researcher Step ---")
         response = await research_chain.ainvoke({"question": question, "context": context_str})
         synthesized_context = response.content
-        
+
         if "NO_CLEAR_ANSWER" in synthesized_context or not synthesized_context.strip():
-            print("--- Researcher found no clear answer. ---")
+            logger.info("--- Researcher found no clear answer. ---")
             return None
-            
-        print(f"--- Researcher synthesized context: ---\n{synthesized_context}\n--------------------")
+
+        logger.info(f"--- Researcher synthesized context: ---\n{synthesized_context}\n--------------------")
         return synthesized_context
 
     async def _get_context_stream(self, question: str, chat_history: List[BaseMessage]) -> AsyncGenerator[Dict, None]:
@@ -94,12 +97,12 @@ class X4RAGChain:
         final_context_str: Optional[str] = None
 
         if keywords:
-            print(f"Found keywords: {keywords}. Retrieving, re-ranking, and researching...")
+            logger.info(f"Found keywords: {keywords}. Retrieving, re-ranking, and researching...")
             retrieved_docs = await self.retriever.ainvoke(question)
             final_context_str = await self._run_researcher_step(question, retrieved_docs)
 
         if not final_context_str:
-            print("Fallback: No keywords found or researcher failed. Using simple semantic retrieval.")
+            logger.info("Fallback: No keywords found or researcher failed. Using simple semantic retrieval.")
             docs = await self.retriever.ainvoke(question)
             final_context_str = "\n\n".join([doc.page_content for doc in docs])
 
@@ -108,8 +111,8 @@ class X4RAGChain:
         # --- THIS IS THE FIX: Pass an empty list for chat_history ---
         # This forces the Actor to be stateless and only focus on the current question and context.
         async for chunk in self.actor_chain.astream({
-            "input": question, 
-            "chat_history": [], 
+            "input": question,
+            "chat_history": [],
             "context": final_documents
         }):
             yield {"answer": chunk}

@@ -4,6 +4,7 @@ import uvicorn
 import json
 import time
 import uuid
+import logging
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -11,6 +12,18 @@ from typing import List, Optional, Literal
 
 from rag_chain import X4RAGChain
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+
+# --- Logging Configuration ---
+# Sets up logging to file and console
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+    handlers=[
+        logging.FileHandler("console.log"),
+        logging.StreamHandler()
+    ]
+)
+# --- End Logging Configuration ---
 
 # ... (Pydantic models are unchanged) ...
 class ChatMessage(BaseModel):
