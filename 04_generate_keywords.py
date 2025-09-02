@@ -1,90 +1,107 @@
-# 12_generate_keywords_from_content.py (Final Corrected Version)
+# 04_generate_keywords.py (Parallelized Version)
 
 import json
 import time
+import concurrent.futures
 from pathlib import Path
 from openai import OpenAI
+from tqdm import tqdm
 
 # --- Configuration ---
-CHUNKS_PATH = "x4_wiki_chunks.json" 
+CHUNKS_PATH = "x4_wiki_chunks.json"
 PROMPT_PATH = "keyword_extractor_prompt.txt"
 OUTPUT_PATH = "x4_keywords.json"
 LM_STUDIO_BASE_URL = "http://localhost:1234/v1"
 API_KEY = "not-needed"
-MODEL_NAME = "local-model" 
+MODEL_NAME = "local-model"
+
+# --- Concurrency Configuration ---
+# Adjust this based on how many concurrent requests your local LLM server can handle.
+# Start with a lower number (e.g., 10) and increase if your system is stable.
+MAX_WORKERS = 20
+
 # --- Retry Configuration ---
 MAX_RETRIES = 3
 RETRY_DELAY_SECONDS = 2
 
+# --- Global Client ---
+# Initialize the client once to be shared across all threads
+CLIENT = OpenAI(base_url=LM_STUDIO_BASE_URL, api_key=API_KEY)
+with open(PROMPT_PATH, "r", encoding="utf-8") as f:
+    PROMPT_TEMPLATE = f.read()
+
+def process_chunk(chunk):
+    """
+    Processes a single chunk to extract keywords.
+    This function is designed to be run in a separate thread.
+    """
+    content = chunk.get("content", "")
+    title = chunk.get("title", "Unknown")
+    
+    # The title itself is a valuable keyword
+    extracted_keywords = {title.strip()}
+
+    if not content.strip():
+        return extracted_keywords
+
+    formatted_prompt = PROMPT_TEMPLATE.format(content=content)
+
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = CLIENT.chat.completions.create(
+                model=MODEL_NAME,
+                messages=[{"role": "user", "content": formatted_prompt}],
+                temperature=0.0,
+                max_tokens=4096,
+            )
+            
+            response_text = response.choices[0].message.content
+            cleaned_response = response_text.strip().replace("```json", "").replace("```", "").strip()
+
+            if not cleaned_response:
+                raise ValueError("LLM returned an empty response.")
+
+            keywords_from_llm = json.loads(cleaned_response)
+            
+            if isinstance(keywords_from_llm, list):
+                sanitized = {str(k).strip() for k in keywords_from_llm if k and isinstance(k, str)}
+                extracted_keywords.update(sanitized)
+            
+            return extracted_keywords # Success
+
+        except (json.JSONDecodeError, ValueError, Exception) as e:
+            if attempt >= MAX_RETRIES - 1:
+                # All retries failed, log the error and return the partial result
+                with open("failed_chunks.log", "a", encoding="utf-8") as log_file:
+                    log_file.write(f"--- FAILED CHUNK (Title: {title}) ---\n")
+                    log_file.write(f"Error: {e}\n\n")
+                return extracted_keywords
+            time.sleep(RETRY_DELAY_SECONDS)
+            
+    return extracted_keywords
+
+
 def main():
     """
-    Uses an LLM to extract keywords from pre-chunked data.
-    Relies on a robust retry mechanism to handle probabilistic failures.
+    Uses a ThreadPoolExecutor to process chunks in parallel for faster keyword extraction.
     """
-    client = OpenAI(base_url=LM_STUDIO_BASE_URL, api_key=API_KEY)
-    
     with open(CHUNKS_PATH, "r", encoding="utf-8") as f:
         chunk_data = json.load(f)
-    with open(PROMPT_PATH, "r", encoding="utf-8") as f:
-        prompt_template = f.read()
 
     all_keywords = set()
     total_chunks = len(chunk_data)
-    print(f"Found {total_chunks} chunks to process...")
+    print(f"Found {total_chunks} chunks to process with up to {MAX_WORKERS} parallel workers...")
 
-    for i, chunk in enumerate(chunk_data):
-        content = chunk.get("content", "")
-        title = chunk.get("title", f"chunk_{i}")
+    # Use ThreadPoolExecutor to process chunks concurrently
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        # Wrap the executor.map with tqdm for a live progress bar
+        results_iterator = executor.map(process_chunk, chunk_data)
         
-        print(f"--- Processing chunk {i+1}/{total_chunks} (from doc: {title}) ---")
-        
-        all_keywords.add(title.strip())
-        if not content.strip():
-            print("Skipping due to empty content.")
-            continue
-        
-        formatted_prompt = prompt_template.format(content=content)
-        
-        for attempt in range(MAX_RETRIES):
-            try:
-                response = client.chat.completions.create(
-                    model=MODEL_NAME,
-                    messages=[{"role": "user", "content": formatted_prompt}],
-                    temperature=0.0,
-                    max_tokens=4096,
-                )
-                
-                response_text = response.choices[0].message.content
-                cleaned_response = response_text.strip().replace("```json", "").replace("```", "").strip()
+        for keyword_set in tqdm(results_iterator, total=total_chunks, desc="Extracting keywords"):
+            if keyword_set:
+                all_keywords.update(keyword_set)
 
-                # --- NEW: Explicit check for empty response ---
-                if not cleaned_response:
-                    # This raises an error that our except block will catch, triggering a retry.
-                    raise ValueError("LLM returned an empty response.")
-
-                extracted_keywords = json.loads(cleaned_response)
-                
-                if isinstance(extracted_keywords, list):
-                    sanitized = {str(k).strip() for k in extracted_keywords if k and isinstance(k, str)}
-                    print(f"Extracted {len(sanitized)} new keywords from chunk.")
-                    all_keywords.update(sanitized)
-                else:
-                    print("Warning: LLM did not return a list.")
-                
-                break 
-            
-            except (json.JSONDecodeError, ValueError, Exception) as e:
-                print(f"An error occurred on attempt {attempt + 1}/{MAX_RETRIES}: {e}")
-                if attempt < MAX_RETRIES - 1:
-                    print(f"Retrying in {RETRY_DELAY_SECONDS} seconds...")
-                    time.sleep(RETRY_DELAY_SECONDS)
-                else:
-                    print(f"All retries failed for chunk {i+1}. Skipping.")
-                    with open("failed_chunks.log", "a", encoding="utf-8") as log_file:
-                        log_file.write(f"--- FAILED CHUNK {i+1} (Title: {title}) ---\n")
-                        log_file.write(content + "\n\n")
-
-    # --- 3. Save the final output ---
+    # --- Save the final output ---
     print("\n--- Processing complete. Finalizing keyword list. ---")
     sorted_keywords = sorted([k for k in all_keywords if k])
     
