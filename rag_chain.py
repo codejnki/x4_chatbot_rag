@@ -1,10 +1,11 @@
-# rag_chain.py
+# rag_chain.py (Corrected)
 
 import json
 from pathlib import Path
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import BaseMessage
+from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -13,95 +14,104 @@ from thefuzz import process, fuzz
 
 class X4RAGChain:
     """
-    A RAG pipeline that uses a refined keyword list and longest-match fuzzy logic
-    to perform robust, precise retrieval from conversational queries.
+    Implements a two-stage "Researcher/Actor" RAG pipeline.
     """
     def _load_text_file(self, file_path: str, description: str) -> str:
         path = Path(file_path)
-        if not path.exists():
-            raise FileNotFoundError(f"{description} file not found at '{file_path}'")
-        try:
-            return path.read_text("utf-8")
-        except Exception as e:
-            print(f"Error loading {description} file: {e}")
-            raise
+        if not path.exists(): raise FileNotFoundError(f"{description} file not found at '{file_path}'")
+        return path.read_text("utf-8")
 
     def _load_json_file(self, file_path: str, description: str) -> dict:
         path = Path(file_path)
-        if not path.exists():
-            raise FileNotFoundError(f"{description} file not found at '{file_path}'")
-        try:
-            return json.loads(path.read_text("utf-8"))
-        except Exception as e:
-            print(f"Error loading {description} file: {e}")
-            raise
+        if not path.exists(): raise FileNotFoundError(f"{description} file not found at '{file_path}'")
+        return json.loads(path.read_text("utf-8"))
 
-    def __init__(self, vector_store_path="faiss_index", model_name="sentence-transformers/all-MiniLM-L6-v2", prompt_path="system_prompt.txt", entities_path="x4_keywords_refined.json"):
-        # --- 1. Load prompts and the refined keyword list ---
-        self.base_system_prompt = self._load_text_file(prompt_path, "System prompt")
+    def __init__(self, vector_store_path="faiss_index", model_name="sentence-transformers/all-MiniLM-L6-v2", 
+                 prompt_path="system_prompt.txt", entities_path="x4_keywords_refined.json", 
+                 researcher_prompt_path="researcher_prompt.txt"):
         
+        self.base_system_prompt = self._load_text_file(prompt_path, "System prompt")
+        researcher_template_str = self._load_text_file(researcher_prompt_path, "Researcher prompt")
+        self.researcher_prompt_template = ChatPromptTemplate.from_template(researcher_template_str)
+
         keywords_data = self._load_json_file(entities_path, "Refined Keywords")
         self.keywords = keywords_data.get("keywords", [])
-        print(f"Loaded {len(self.keywords)} refined keywords for fuzzy matching.")
-        if self.keywords:
-            print(f"Sample keywords: {self.keywords[:5]}")
+        print(f"Loaded {len(self.keywords)} refined keywords.")
 
-        # --- 2. Load retriever and model ---
         embeddings = HuggingFaceEmbeddings(model_name=model_name)
         self.vectorstore = FAISS.load_local(vector_store_path, embeddings, allow_dangerous_deserialization=True)
-        self.retriever = self.vectorstore.as_retriever()
+        self.retriever = self.vectorstore.as_retriever(search_kwargs={"k": 3})
         
-        self.model = ChatOpenAI(base_url="http://localhost:1234/v1", api_key="not-needed", temperature=0.7)
+        self.actor_model = ChatOpenAI(base_url="http://localhost:1234/v1", api_key="not-needed", temperature=0.7)
+        self.researcher_model = ChatOpenAI(base_url="http://localhost:1234/v1", api_key="not-needed", temperature=0.0)
 
-        # --- 3. Create the document combination chain ---
-        answer_prompt_template = ChatPromptTemplate.from_messages([
+        actor_prompt_template = ChatPromptTemplate.from_messages([
             ("system", self.base_system_prompt),
             MessagesPlaceholder(variable_name="chat_history"),
             ("user", "{input}"),
         ])
-        self.document_chain = create_stuff_documents_chain(self.model, answer_prompt_template)
+        self.actor_chain = create_stuff_documents_chain(self.actor_model, actor_prompt_template)
 
-    def _find_entity_in_query(self, query: str) -> Optional[str]:
-        """
-        Finds all good fuzzy matches in the query, filters them by a score
-        threshold, and then returns the longest one to prioritize specificity.
-        """
-        # --- THIS IS THE CORRECTED LOGIC ---
-        # 1. Get the top 5 candidate matches from the full list.
-        all_matches = process.extract(
-            query, 
-            self.keywords, 
-            scorer=fuzz.token_set_ratio, 
-            limit=5
-        )
+    def _find_all_entities_in_query(self, query: str) -> List[str]:
+        all_matches = process.extract(query, self.keywords, scorer=fuzz.token_set_ratio, limit=5)
+        good_matches = [match[0] for match in all_matches if match[1] >= 90]
+        return list(set(good_matches))
+
+    # We'll add 'keywords' as a parameter here
+    async def _run_researcher_step(self, keywords: List[str], documents: List[Document]) -> Optional[str]:
+        if not documents: return None
         
-        # 2. Filter these candidates by our score cutoff.
-        good_matches = [match for match in all_matches if match[1] >= 90]
+        # --- THIS IS THE KEY CHANGE ---
+        # Instead of the user's raw question, we create a new, factual one for the researcher.
+        researcher_question = f"Summarize the key information about the following topics based on the provided text: {', '.join(keywords)}"
         
-        if not good_matches:
+        context_str = "\n\n---\n\n".join([f"Source: {doc.metadata.get('title', 'Unknown')}\n\n{doc.page_content}" for doc in documents])
+        
+        research_chain = self.researcher_prompt_template | self.researcher_model
+        
+        print("--- Running Researcher Step ---")
+        # Use the new, synthetic question here
+        response = await research_chain.ainvoke({"question": researcher_question, "context": context_str})
+        synthesized_context = response.content
+        
+        if "NO_CLEAR_ANSWER" in synthesized_context or not synthesized_context.strip():
+            print("--- Researcher found no clear answer. ---")
             return None
             
-        # 3. From the remaining good matches, find the one with the longest string length.
-        # This ensures "Hull Parts" is chosen over "Hull".
-        best_match = max(good_matches, key=lambda match: len(match[0]))
-        return best_match[0]
-        # ------------------------------------
+        print(f"--- Researcher synthesized context: ---\n{synthesized_context}\n--------------------")
+        return synthesized_context
+
+
+    async def _get_context_stream(self, question: str, chat_history: List[BaseMessage]) -> AsyncGenerator[Dict, None]:
+        keywords = self._find_all_entities_in_query(question)
+        final_context_str: Optional[str] = None
+
+        if keywords:
+            print(f"Found keywords: {keywords}. Retrieving and researching...")
+            all_docs = []
+            seen_content = set()
+            for keyword in keywords:
+                docs = await self.retriever.ainvoke(keyword)
+                for doc in docs:
+                    if doc.page_content not in seen_content:
+                        all_docs.append(doc)
+                        seen_content.add(doc.page_content)
+            # Pass the original user question AND the keywords to the researcher step
+            final_context_str = await self._run_researcher_step(keywords, all_docs)
+
+        if not final_context_str:
+            print("Fallback: No keywords found or researcher failed. Using simple semantic retrieval.")
+            docs = await self.retriever.ainvoke(question)
+            final_context_str = "\n\n".join([doc.page_content for doc in docs])
+
+        final_documents = [Document(page_content=final_context_str)]
+
+        async for chunk in self.actor_chain.astream({
+            "input": question, 
+            "chat_history": chat_history, 
+            "context": final_documents
+        }):
+            yield {"answer": chunk}
 
     async def stream_query(self, question: str, chat_history: List[BaseMessage]) -> AsyncGenerator[Dict, None]:
-        """
-        Queries the RAG chain using the robust hybrid fuzzy/semantic search.
-        """
-        retrieval_query = self._find_entity_in_query(question)
-        
-        if retrieval_query:
-            print(f"Found entity via fuzzy match: '{retrieval_query}'. Using it for precise retrieval.")
-        else:
-            print("No specific entity found. Using full query for semantic retrieval.")
-            retrieval_query = question
-
-        retrieved_docs = await self.retriever.ainvoke(retrieval_query)
-        
-        async for chunk in self.document_chain.astream(
-            {"input": question, "chat_history": chat_history, "context": retrieved_docs}
-        ):
-            yield {"answer": chunk}
+        return self._get_context_stream(question, chat_history)
