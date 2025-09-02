@@ -32,3 +32,11 @@ We first need to unpack our copy of the X4 community wiki.  Open the terminal in
 ```sh
 make data
 ```
+
+### Corpus Data
+
+Once we have the Wiki data downloaded, we need to turn it into a format that we can easily parse.  The `01_generate_corpus.py` script will pull each document from the wiki and convert it into a Markdown compatible string.  It will strip links and images from the text.  It will then put all the pages into a single `x4_wiki_corpus.json` file.
+
+```sh
+make corpus
+```

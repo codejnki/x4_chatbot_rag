@@ -5,6 +5,10 @@ ZIP_FILE := x4-foundations-wiki.zip
 WIKI_DIR := x4-foundations-wiki
 PAGES_DIR := $(WIKI_DIR)/pages
 
+# Python scripts and generated files
+GENERATE_CORPUS_SCRIPT := 01_generate_corpus.py
+CORPUS_FILE := x4_wiki_corpus.json
+
 # Define the virtual environment directory
 VENV_DIR := .venv
 
@@ -16,8 +20,6 @@ ifeq ($(OS),Windows_NT)
     ACTIVATE_CMD := .\\$(VENV_DIR)\\Scripts\\activate
     RM_RF = cmd /c rmdir /s /q
     # Use 7-Zip on Windows to handle long file paths.
-    # Assumes '7z.exe' is in your system PATH.
-    # You can install it with 'winget install -e --id 7zip.7zip'
     UNZIP_CMD = 7z x $(ZIP_FILE) -o$(WIKI_DIR) pages -y
 else
     # Unix-like (Linux, macOS) settings
@@ -34,6 +36,8 @@ PIP := $(VENV_DIR)/$(VENV_PATH_DIR)/pip
 
 # Define the requirements file
 REQUIREMENTS := requirements.txt
+
+# --- Targets ---
 
 # By default, running 'make' will run the 'install' target
 .DEFAULT_GOAL := install
@@ -55,12 +59,24 @@ $(PIP):
 	@echo "--> Virtual environment created."
 	@echo "--> To activate it, run: $(ACTIVATE_CMD)"
 
-# Unzip the wiki data.
+# --- Data Pipeline ---
+
+# Create the JSON corpus from the HTML files.
+# This depends on the data being unzipped first.
+corpus: $(CORPUS_FILE)
+$(CORPUS_FILE): $(PAGES_DIR) $(PROCESS_SCRIPT)
+	@echo "--> Generating wiki corpus from HTML files..."
+	$(PYTHON) $(GENERATE_CORPUS_SCRIPT)
+	@echo "--> Corpus file '$(CORPUS_FILE)' is up to date."
+
+# Unzip the wiki data. This target is idempotent.
 data: $(PAGES_DIR)
 $(PAGES_DIR): $(ZIP_FILE)
 	@echo "--> Unzipping wiki data from $(ZIP_FILE)..."
 	$(UNZIP_CMD)
 	@echo "--> Wiki data is ready."
+
+# --- Utility Targets ---
 
 # Freeze dependencies
 freeze: venv
@@ -73,6 +89,7 @@ clean:
 	@echo "--> Cleaning up..."
 	-$(RM_RF) $(VENV_DIR)
 	-$(RM_RF) $(WIKI_DIR)
+	-$(RM_RF) $(CORPUS_FILE)
 	find . -type f -name "*.pyc" -delete
 	find . -type d -name "__pycache__" -delete
 	@echo "--> Cleanup complete."
@@ -80,9 +97,10 @@ clean:
 # Help
 help:
 	@echo "Available targets:"
-	@echo "  install - (Default) Creates venv and installs dependencies from requirements.txt."
+	@echo "  install - (Default) Creates venv and installs dependencies."
+	@echo "  corpus  - Generates the JSON corpus from the wiki data."
 	@echo "  data    - Unzips the wiki data from $(ZIP_FILE)."
 	@echo "  venv    - Creates the virtual environment."
-	@echo "  freeze  - Freezes the current environment's packages into requirements.txt."
-	@echo "  clean   - Removes the virtual environment, wiki data, and Python cache files."
+	@echo "  freeze  - Updates requirements.txt from the current environment."
+	@echo "  clean   - Removes the venv, wiki data, and generated files."
 	@echo "  help    - Shows this help message."
