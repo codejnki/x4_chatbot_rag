@@ -12,6 +12,11 @@ CHUNK_SCRIPT := 02_chunk_corpus.py
 CHUNKS_FILE := x4_wiki_chunks.json
 VECTOR_STORE_SCRIPT := 03_build_vector_store.py
 VECTOR_STORE_DIR := faiss_index
+KEYWORDS_SCRIPT := 04_generate_keywords.py
+KEYWORDS_FILE := x4_keywords.json
+REFINE_KEYWORDS_SCRIPT := 05_refine_keywords.py
+REFINED_KEYWORDS_FILE := x4_keywords_refined.json
+
 
 # Define the virtual environment directory
 VENV_DIR := .venv
@@ -65,6 +70,20 @@ $(PIP):
 
 # --- Data Pipeline ---
 
+# Generate the final, refined keyword list.
+keywords-refined: $(REFINED_KEYWORDS_FILE)
+$(REFINED_KEYWORDS_FILE): $(KEYWORDS_FILE) $(REFINE_KEYWORDS_SCRIPT)
+	@echo "--> Refining keyword list..."
+	$(PYTHON) $(REFINE_KEYWORDS_SCRIPT)
+	@echo "--> Refined keywords file is up to date."
+
+# Generate the raw keyword list from the chunks using an LLM.
+keywords: $(KEYWORDS_FILE)
+$(KEYWORDS_FILE): $(CHUNKS_FILE) $(KEYWORDS_SCRIPT)
+	@echo "--> Generating keywords from chunks (this will take a long time)..."
+	$(PYTHON) $(KEYWORDS_SCRIPT)
+	@echo "--> Raw keywords file is up to date."
+
 # Build the FAISS vector store from the chunks.
 vector-store: $(VECTOR_STORE_DIR)
 $(VECTOR_STORE_DIR): $(CHUNKS_FILE) $(VECTOR_STORE_SCRIPT)
@@ -106,7 +125,7 @@ clean:
 	@echo "--> Cleaning up..."
 	-$(RM_RF) $(VENV_DIR)
 	-$(RM_RF) $(WIKI_DIR)
-	-$(RM_RF) $(CORPUS_FILE) $(CHUNKS_FILE)
+	-$(RM_RF) $(CORPUS_FILE) $(CHUNKS_FILE) $(KEYWORDS_FILE) $(REFINED_KEYWORDS_FILE)
 	-$(RM_RF) $(VECTOR_STORE_DIR)
 	find . -type f -name "*.pyc" -delete
 	find . -type d -name "__pycache__" -delete
@@ -115,12 +134,14 @@ clean:
 # Help
 help:
 	@echo "Available targets:"
-	@echo "  install      - (Default) Creates venv and installs dependencies."
-	@echo "  vector-store - Builds the FAISS vector store for the RAG model."
-	@echo "  chunks       - Generates the chunked JSON file for embedding."
-	@echo "  corpus       - Generates the JSON corpus from the wiki data."
-	@echo "  data         - Unzips the wiki data from $(ZIP_FILE)."
-	@echo "  venv         - Creates the virtual environment."
-	@echo "  freeze       - Updates requirements.txt from the current environment."
-	@echo "  clean        - Removes the venv, data, and all generated files."
-	@echo "  help         - Shows this help message."
+	@echo "  install           - (Default) Creates venv and installs dependencies."
+	@echo "  keywords-refined  - Creates the final, cleaned list of keywords."
+	@echo "  keywords          - Generates a raw list of keywords using an LLM."
+	@echo "  vector-store      - Builds the FAISS vector store for the RAG model."
+	@echo "  chunks            - Generates the chunked JSON file for embedding."
+	@echo "  corpus            - Generates the JSON corpus from the wiki data."
+	@echo "  data              - Unzips the wiki data from $(ZIP_FILE)."
+	@echo "  venv              - Creates the virtual environment."
+	@echo "  freeze            - Updates requirements.txt from the current environment."
+	@echo "  clean             - Removes the venv, data, and all generated files."
+	@echo "  help              - Shows this help message."

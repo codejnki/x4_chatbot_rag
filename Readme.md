@@ -50,8 +50,25 @@ make chunks
 ```
 
 ### Vector Data
-TODO
+
+In order to build RAG database, we need to put it into a vector store.
 
 ```sh
 make vector-store
+```
+
+### Keywords
+
+The next important step is to now build a brand new list of keywords from the content of the wiki pages.  Our chat bot will leverage a reshearcher who spots for keywords in the chat, and pulls out relevant data to hand to our "actor".
+
+```sh
+make keywords
+```
+
+### Keywords Refined
+
+To help our researcher focus on what's important, this is a small cleanup pass to remove words that aren't domain specific to X4.
+
+```sh
+make keywords-refined
 ```
