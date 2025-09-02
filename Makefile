@@ -17,56 +17,51 @@ KEYWORDS_FILE := x4_keywords.json
 REFINE_KEYWORDS_SCRIPT := 05_refine_keywords.py
 REFINED_KEYWORDS_FILE := x4_keywords_refined.json
 
-
 # Define the virtual environment directory
 VENV_DIR := .venv
 
 # OS-specific configuration
 ifeq ($(OS),Windows_NT)
-    # Windows settings
     PY := python
     VENV_PATH_DIR := Scripts
-    ACTIVATE_CMD := .\\$(VENV_DIR)\\Scripts\\activate
-    RM_RF = cmd /c rmdir /s /q
-    # Use 7-Zip on Windows to handle long file paths.
     UNZIP_CMD = 7z x $(ZIP_FILE) -o$(WIKI_DIR) pages -y
 else
-    # Unix-like (Linux, macOS) settings
     PY := python3
     VENV_PATH_DIR := bin
-    ACTIVATE_CMD := source $(VENV_DIR)/bin/activate
-    RM_RF = rm -rf
     UNZIP_CMD = unzip -oq $(ZIP_FILE) 'pages/*' -d $(WIKI_DIR)
 endif
 
-# Define the Python interpreter from within the virtual environment
+# Define the Python interpreter and pip from within the virtual environment
 PYTHON := $(VENV_DIR)/$(VENV_PATH_DIR)/python
 PIP := $(VENV_DIR)/$(VENV_PATH_DIR)/pip
+VENV_TIMESTAMP := $(VENV_DIR)/.installed
 
-# Define the requirements file
-REQUIREMENTS := requirements.txt
+# --- Main Targets ---
+.DEFAULT_GOAL := run
 
-# --- Targets ---
+.PHONY: data clean freeze help all run install
 
-# By default, running 'make' will run the 'install' target
-.DEFAULT_GOAL := install
+# Run the entire pipeline and start the server
+run: all
+	@echo "--> Starting the FastAPI server..."
+	$(PYTHON) main.py
 
-# Phony targets are not files.
-.PHONY: install venv data clean freeze help
+# Build all data artifacts after ensuring dependencies are installed
+all: $(VENV_TIMESTAMP) vector-store keywords-refined
 
-# Install dependencies
-install: venv
-	@echo "--> Installing dependencies from $(REQUIREMENTS)..."
-	$(PIP) install -r $(REQUIREMENTS)
-	@echo "--> Dependencies installed successfully."
+# A phony target to make 'make install' user-friendly
+install: $(VENV_TIMESTAMP)
 
-# Create virtual environment if it doesn't exist
-venv: $(PIP)
+# Install dependencies only if venv is new or requirements.txt has changed
+$(VENV_TIMESTAMP): $(PIP) requirements.txt
+	@echo "--> Installing/updating dependencies..."
+	$(PIP) install -r requirements.txt
+	touch $(VENV_TIMESTAMP)
+
+# Create virtual environment if its pip executable doesn't exist
 $(PIP):
 	@echo "--> Creating virtual environment in $(VENV_DIR)..."
 	$(PY) -m venv $(VENV_DIR)
-	@echo "--> Virtual environment created."
-	@echo "--> To activate it, run: $(ACTIVATE_CMD)"
 
 # --- Data Pipeline ---
 
@@ -75,58 +70,51 @@ keywords-refined: $(REFINED_KEYWORDS_FILE)
 $(REFINED_KEYWORDS_FILE): $(KEYWORDS_FILE) $(REFINE_KEYWORDS_SCRIPT)
 	@echo "--> Refining keyword list..."
 	$(PYTHON) $(REFINE_KEYWORDS_SCRIPT)
-	@echo "--> Refined keywords file is up to date."
 
 # Generate the raw keyword list from the chunks using an LLM.
 keywords: $(KEYWORDS_FILE)
 $(KEYWORDS_FILE): $(CHUNKS_FILE) $(KEYWORDS_SCRIPT)
 	@echo "--> Generating keywords from chunks (this will take a long time)..."
 	$(PYTHON) $(KEYWORDS_SCRIPT)
-	@echo "--> Raw keywords file is up to date."
 
 # Build the FAISS vector store from the chunks.
 vector-store: $(VECTOR_STORE_DIR)
 $(VECTOR_STORE_DIR): $(CHUNKS_FILE) $(VECTOR_STORE_SCRIPT)
 	@echo "--> Building vector store from chunks..."
 	$(PYTHON) $(VECTOR_STORE_SCRIPT)
-	@echo "--> Vector store is up to date."
 
 # Create the chunked JSON file from the corpus.
 chunks: $(CHUNKS_FILE)
 $(CHUNKS_FILE): $(CORPUS_FILE) $(CHUNK_SCRIPT)
 	@echo "--> Chunking corpus file..."
 	$(PYTHON) $(CHUNK_SCRIPT)
-	@echo "--> Chunks file '$(CHUNKS_FILE)' is up to date."
 
 # Create the JSON corpus from the HTML files.
 corpus: $(CORPUS_FILE)
 $(CORPUS_FILE): $(PAGES_DIR) $(CORPUS_SCRIPT)
 	@echo "--> Generating wiki corpus from HTML files..."
 	$(PYTHON) $(CORPUS_SCRIPT)
-	@echo "--> Corpus file '$(CORPUS_FILE)' is up to date."
 
 # Unzip the wiki data.
 data: $(PAGES_DIR)
 $(PAGES_DIR): $(ZIP_FILE)
 	@echo "--> Unzipping wiki data from $(ZIP_FILE)..."
 	$(UNZIP_CMD)
-	@echo "--> Wiki data is ready."
 
 # --- Utility Targets ---
 
 # Freeze dependencies
-freeze: venv
-	@echo "--> Freezing dependencies to $(REQUIREMENTS)..."
-	$(PIP) freeze > $(REQUIREMENTS)
-	@echo "--> requirements.txt has been updated."
+freeze: $(PIP)
+	@echo "--> Freezing dependencies to requirements.txt..."
+	$(PIP) freeze > requirements.txt
 
 # Clean up the project
 clean:
 	@echo "--> Cleaning up..."
-	-$(RM_RF) $(VENV_DIR)
-	-$(RM_RF) $(WIKI_DIR)
-	-$(RM_RF) $(CORPUS_FILE) $(CHUNKS_FILE) $(KEYWORDS_FILE) $(REFINED_KEYWORDS_FILE)
-	-$(RM_RF) $(VECTOR_STORE_DIR)
+	-rm -rf $(VENV_DIR)
+	-rm -rf $(WIKI_DIR)
+	-rm -f $(CORPUS_FILE) $(CHUNKS_FILE) $(KEYWORDS_FILE) $(REFINED_KEYWORDS_FILE)
+	-rm -rf $(VECTOR_STORE_DIR)
 	find . -type f -name "*.pyc" -delete
 	find . -type d -name "__pycache__" -delete
 	@echo "--> Cleanup complete."
@@ -134,14 +122,15 @@ clean:
 # Help
 help:
 	@echo "Available targets:"
-	@echo "  install           - (Default) Creates venv and installs dependencies."
+	@echo "  run               - (Default) Builds all data and starts the server."
+	@echo "  all               - Ensures dependencies are installed and builds all data artifacts."
+	@echo "  install           - Ensures venv exists and all dependencies are installed."
 	@echo "  keywords-refined  - Creates the final, cleaned list of keywords."
 	@echo "  keywords          - Generates a raw list of keywords using an LLM."
 	@echo "  vector-store      - Builds the FAISS vector store for the RAG model."
 	@echo "  chunks            - Generates the chunked JSON file for embedding."
 	@echo "  corpus            - Generates the JSON corpus from the wiki data."
 	@echo "  data              - Unzips the wiki data from $(ZIP_FILE)."
-	@echo "  venv              - Creates the virtual environment."
 	@echo "  freeze            - Updates requirements.txt from the current environment."
 	@echo "  clean             - Removes the venv, data, and all generated files."
 	@echo "  help              - Shows this help message."
