@@ -22,8 +22,7 @@ LM_STUDIO_BASE_URL = "http://localhost:1234/v1"
 API_KEY = "not-needed"
 SUMMARIZER_PROMPT_PATH = "table_summarizer_prompt.txt"
 
-# Using a very conservative token limit for the initial summarization pass to avoid overflow.
-# Llama 3 8B has an 8k context window. 6k leaves a large buffer.
+# Context window configuration
 MAX_CONTEXT_TOKENS = 6000
 
 # Initialize the OpenAI client and tokenizer
@@ -31,7 +30,7 @@ CLIENT = OpenAI(base_url=LM_STUDIO_BASE_URL, api_key=API_KEY)
 SUMMARIZER_PROMPT_TEMPLATE = Path(SUMMARIZER_PROMPT_PATH).read_text("utf-8")
 tokenizer = tiktoken.get_encoding("cl100k_base")
 
-# --- NEW: Batching Summarization Function ---
+# --- Batching Summarization Function ---
 def summarize_content_in_batches(content: str) -> str:
     """
     Splits large content into chunks, summarizes each chunk, and then consolidates
@@ -56,14 +55,14 @@ def summarize_content_in_batches(content: str) -> str:
     # If the content is too large, split it and summarize in batches
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=MAX_CONTEXT_TOKENS,
-        chunk_overlap=200, # Small overlap to maintain context between chunks
+        chunk_overlap=200,
         length_function=lambda text: len(tokenizer.encode(text)),
     )
     chunks = text_splitter.split_text(content)
     
     summaries = []
-    print(f"\nContent too large ({content_tokens} tokens), splitting into {len(chunks)} batches for summarization.")
-    for i, chunk in enumerate(tqdm(chunks, desc="Summarizing batches")):
+    print(f"\nContent too large ({content_tokens} tokens), splitting into {len(chunks)} batches.")
+    for i, chunk in enumerate(tqdm(chunks, desc="Summarizing batches", leave=False)):
         try:
             formatted_prompt = SUMMARIZER_PROMPT_TEMPLATE.format(content=chunk)
             response = CLIENT.chat.completions.create(
@@ -79,22 +78,25 @@ def summarize_content_in_batches(content: str) -> str:
     if not summaries:
         return ""
 
-    # Consolidate the summaries
-    combined_summaries = "\n\n".join(summaries)
-    try:
-        final_prompt = f"Consolidate the following summaries into a single, coherent summary:\n\n{combined_summaries}"
-        final_response = CLIENT.chat.completions.create(
-            model="local-model",
-            messages=[{"role": "user", "content": final_prompt}],
-            temperature=0.2,
-        )
-        return final_response.choices[0].message.content
-    except APIError as e:
-        print(f"Warning: API error during final consolidation: {e}")
-        return combined_summaries # Return combined summaries if final pass fails
+    # Consolidate the summaries if there are more than one
+    if len(summaries) > 1:
+        try:
+            combined_summaries = "\n\n".join(summaries)
+            final_prompt = f"Consolidate the following summaries into a single, coherent summary:\n\n{combined_summaries}"
+            final_response = CLIENT.chat.completions.create(
+                model="local-model",
+                messages=[{"role": "user", "content": final_prompt}],
+                temperature=0.2,
+            )
+            return final_response.choices[0].message.content
+        except APIError as e:
+            print(f"Warning: API error during final consolidation: {e}")
+            return combined_summaries
+    
+    return summaries[0]
 
 
-# --- Core Processing Function (Updated) ---
+# --- Core Processing Function (Corrected) ---
 def process_html_file(file_path):
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -114,9 +116,15 @@ def process_html_file(file_path):
             a_tag.unwrap()
 
         body_markdown = md(str(body_container), heading_style="ATX", strip=['img'])
+        
+        # --- THIS IS THE FIX ---
+        # Combine title and body to create the full markdown content first
+        full_markdown = f"# {title}\n\n{body_markdown}"
+        # Then clean it
         cleaned_markdown = re.sub(r'\n{3,}', '\n\n', full_markdown).strip()
+        # --- END FIX ---
 
-        # --- USE THE NEW BATCHING SUMMARIZER ---
+        # Now, pass the full, cleaned markdown to the new batching summarizer
         summary = summarize_content_in_batches(cleaned_markdown)
         
         # Combine the new summary with the original content
@@ -131,12 +139,35 @@ def process_html_file(file_path):
         print(f"Error processing file {file_path}: {e}")
         return None
 
-# --- Main Execution (Unchanged, but with better error reporting) ---
+# --- Main Execution ---
 def main():
     print("Starting Phase 1: Data Preparation (with LLM summarization)")
     
     target_files = []
-    # ... (rest of main function is the same, but ensure you have tqdm installed)
+    for root, _, files in os.walk(DATA_SOURCE_DIR):
+        if TARGET_FILENAME in files:
+            target_files.append(os.path.join(root, TARGET_FILENAME))
+    
+    if not target_files:
+        print(f"Error: No files named '{TARGET_FILENAME}' found in '{DATA_SOURCE_DIR}'.")
+        return
+
+    print(f"Found {len(target_files)} pages to process.")
+
+    processed_docs = []
+    for file_path in tqdm(target_files, desc="Processing & Summarizing HTML"):
+        result = process_html_file(file_path)
+        if result:
+            processed_docs.append(result)
+
+    print(f"Successfully processed and enriched {len(processed_docs)} documents.")
+
+    print(f"Saving the processed data to '{OUTPUT_FILE}'...")
+    with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
+        json.dump(processed_docs, f, indent=2, ensure_ascii=False)
+        
+    print("\nData preparation complete!")
+    print(f"Corpus saved to {OUTPUT_FILE}")
 
 if __name__ == "__main__":
     main()
