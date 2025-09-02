@@ -1,4 +1,4 @@
-# rag_chain.py (Final Version with Re-ranking)
+# rag_chain.py (Final Version with Re-ranking and State Fix)
 
 import json
 from pathlib import Path
@@ -9,13 +9,9 @@ from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain.chains.combine_documents import create_stuff_documents_chain
-
-# --- NEW: Imports for Re-ranking ---
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import CrossEncoderReranker
 from langchain_community.cross_encoders import HuggingFaceCrossEncoder
-# ------------------------------------
-
 from typing import AsyncGenerator, List, Dict, Optional
 from thefuzz import process, fuzz
 
@@ -47,26 +43,24 @@ class X4RAGChain:
 
         embeddings = HuggingFaceEmbeddings(model_name=model_name)
         base_vectorstore = FAISS.load_local(vector_store_path, embeddings, allow_dangerous_deserialization=True)
-        base_retriever = base_vectorstore.as_retriever(search_kwargs={"k": 18})
-
-        # --- NEW: Setup the Re-ranking Retriever ---
-        # The CrossEncoder model is specifically trained to predict the similarity
-        # between a question and a document.
-        reranker_model = HuggingFaceCrossEncoder(model_name="BAAI/bge-reranker-base")
-        compressor = CrossEncoderReranker(model=reranker_model, top_n=5)
+        base_retriever = base_vectorstore.as_retriever(search_kwargs={"k": 50})
         
-        # The ContextualCompressionRetriever wraps our base retriever. It retrieves
-        # the initial 18 documents and then uses the compressor to re-rank and filter them.
+        reranker_model = HuggingFaceCrossEncoder(model_name="BAAI/bge-reranker-base")
+        compressor = CrossEncoderReranker(model=reranker_model, top_n=7)
+        
         self.retriever = ContextualCompressionRetriever(
             base_compressor=compressor, base_retriever=base_retriever
         )
-        # ---------------------------------------------
         
         self.actor_model = ChatOpenAI(base_url="http://localhost:1234/v1", api_key="not-needed", temperature=0.7)
         self.researcher_model = ChatOpenAI(base_url="http://localhost:1234/v1", api_key="not-needed", temperature=0.0)
 
+        # --- THIS IS THE FIX ---
+        # We now explicitly include a placeholder for the context, which is required
+        # by the create_stuff_documents_chain function.
         actor_prompt_template = ChatPromptTemplate.from_messages([
             ("system", self.base_system_prompt),
+            ("system", "Context from the X4 Foundations wiki:\n{context}"),
             MessagesPlaceholder(variable_name="chat_history"),
             ("user", "{input}"),
         ])
@@ -101,13 +95,8 @@ class X4RAGChain:
 
         if keywords:
             print(f"Found keywords: {keywords}. Retrieving, re-ranking, and researching...")
-            
-            # --- UPDATED: Use the original question for re-ranking ---
             retrieved_docs = await self.retriever.ainvoke(question)
-            
-            # The researcher now receives the user's actual question, not the synthetic one.
             final_context_str = await self._run_researcher_step(question, retrieved_docs)
-            # --------------------------------------------------------
 
         if not final_context_str:
             print("Fallback: No keywords found or researcher failed. Using simple semantic retrieval.")
@@ -116,9 +105,11 @@ class X4RAGChain:
 
         final_documents = [Document(page_content=final_context_str)]
 
+        # --- THIS IS THE FIX: Pass an empty list for chat_history ---
+        # This forces the Actor to be stateless and only focus on the current question and context.
         async for chunk in self.actor_chain.astream({
             "input": question, 
-            "chat_history": chat_history, 
+            "chat_history": [], 
             "context": final_documents
         }):
             yield {"answer": chunk}
