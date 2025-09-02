@@ -25,15 +25,19 @@ ifeq ($(OS),Windows_NT)
     PY := python
     VENV_PATH_DIR := Scripts
     UNZIP_CMD = 7z x $(ZIP_FILE) -o$(WIKI_DIR) pages -y
+    RM_RF = cmd /c rmdir /s /q
+    EXE := .exe
 else
     PY := python3
     VENV_PATH_DIR := bin
     UNZIP_CMD = unzip -oq $(ZIP_FILE) 'pages/*' -d $(WIKI_DIR)
+    RM_RF = rm -rf
+    EXE :=
 endif
 
 # Define the Python interpreter and pip from within the virtual environment
-PYTHON := $(VENV_DIR)/$(VENV_PATH_DIR)/python
-PIP := $(VENV_DIR)/$(VENV_PATH_DIR)/pip
+PYTHON := $(VENV_DIR)/$(VENV_PATH_DIR)/python$(EXE)
+PIP := $(VENV_DIR)/$(VENV_PATH_DIR)/pip$(EXE)
 VENV_TIMESTAMP := $(VENV_DIR)/.installed
 
 # --- Main Targets ---
@@ -111,8 +115,8 @@ freeze: $(PIP)
 # Clean up the project
 clean:
 	@echo "--> Cleaning up..."
-	-rm -rf $(VENV_DIR)
-	-rm -rf $(WIKI_DIR)
+	-$(RM_RF) $(VENV_DIR)
+	-$(RM_RF) $(WIKI_DIR)
 	-rm -f $(CORPUS_FILE) $(CHUNKS_FILE) $(KEYWORDS_FILE) $(REFINED_KEYWORDS_FILE)
 	-rm -rf $(VECTOR_STORE_DIR)
 	find . -type f -name "*.pyc" -delete
