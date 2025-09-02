@@ -14,6 +14,7 @@ VECTOR_STORE_SCRIPT := 03_build_vector_store.py
 VECTOR_STORE_DIR := faiss_index
 KEYWORDS_SCRIPT := 04_generate_keywords.py
 KEYWORDS_FILE := x4_keywords.json
+KEYWORDS_CACHE_DIR := .keyword_cache
 REFINE_KEYWORDS_SCRIPT := 05_refine_keywords.py
 REFINED_KEYWORDS_FILE := x4_keywords_refined.json
 
@@ -43,7 +44,7 @@ VENV_TIMESTAMP := $(VENV_DIR)/.installed
 # --- Main Targets ---
 .DEFAULT_GOAL := run
 
-.PHONY: data clean freeze help all run install
+.PHONY: data clean clean-keywords freeze help all run install
 
 # Run the entire pipeline and start the server
 run: all
@@ -78,7 +79,7 @@ $(REFINED_KEYWORDS_FILE): $(KEYWORDS_FILE) $(REFINE_KEYWORDS_SCRIPT)
 # Generate the raw keyword list from the chunks using an LLM.
 keywords: $(KEYWORDS_FILE)
 $(KEYWORDS_FILE): $(CHUNKS_FILE) $(KEYWORDS_SCRIPT)
-	@echo "--> Generating keywords from chunks (this will take a long time)..."
+	@echo "--> Generating keywords from chunks (this may take a long time)..."
 	$(PYTHON) $(KEYWORDS_SCRIPT)
 
 # Build the FAISS vector store from the chunks.
@@ -114,14 +115,20 @@ freeze: $(PIP)
 
 # Clean up the project
 clean:
-	@echo "--> Cleaning up..."
+	@echo "--> Cleaning up project files (keyword cache is preserved)..."
 	-$(RM_RF) $(VENV_DIR)
 	-$(RM_RF) $(WIKI_DIR)
 	-rm -f $(CORPUS_FILE) $(CHUNKS_FILE) $(KEYWORDS_FILE) $(REFINED_KEYWORDS_FILE)
-	-rm -rf $(VECTOR_STORE_DIR)
+	-$(RM_RF) $(VECTOR_STORE_DIR)
 	find . -type f -name "*.pyc" -delete
 	find . -type d -name "__pycache__" -delete
 	@echo "--> Cleanup complete."
+
+# Clean the keyword cache specifically
+clean-keywords:
+	@echo "--> Deleting keyword cache..."
+	-$(RM_RF) $(KEYWORDS_CACHE_DIR)
+	@echo "--> Keyword cache deleted."
 
 # Help
 help:
@@ -136,5 +143,6 @@ help:
 	@echo "  corpus            - Generates the JSON corpus from the wiki data."
 	@echo "  data              - Unzips the wiki data from $(ZIP_FILE)."
 	@echo "  freeze            - Updates requirements.txt from the current environment."
-	@echo "  clean             - Removes the venv, data, and all generated files."
+	@echo "  clean             - Removes the venv, data, and generated files (preserves keyword cache)."
+	@echo "  clean-keywords    - Deletes the keyword generation cache for a full rebuild."
 	@echo "  help              - Shows this help message."

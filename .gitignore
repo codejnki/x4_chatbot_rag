@@ -1,10 +1,11 @@
 .venv
 __pycache__
+.keyword_cache
+faiss_index
 
 x4-foundations-wiki*
 x4_wiki_corpus.json
 x4_wiki_chunks.json
-faiss_index
-x4_entities.json
 x4_keywords.json
 x4_keywords_refined.json
+
