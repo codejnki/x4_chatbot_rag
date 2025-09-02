@@ -40,3 +40,11 @@ Once we have the Wiki data downloaded, we need to turn it into a format that we 
 ```sh
 make corpus
 ```
+
+### Chunk The Corpus
+
+Next we need to break each of our wiki page entries into smaller chunks of strings.  It will be these chunks that we'll build our vector data from that powers our X4 Encyclopidia for the chat bot.
+
+```sh
+make chunks
+```
