@@ -1,0 +1,187 @@
+--- FAILED CHUNK 23 (Title: Game Updates and Patch History) ---
+# Game Updates and Patch History
+
+### Changelogs
+
+Current Version and Build Number
+
+--- FAILED CHUNK 28 (Title: Public Beta Access and Information) ---
+1. In general we do not suggest users to participate in the public beta test, but rather stick with the more stable release versions. If you want to help us test a new version or are heavily impacted by an issue which is known to having been resolved in a beta version, using the public beta is however an option to consider.
+2. While we try to preserve savegame compatibility during public beta tests, there might be situations where some issue slips by and/or it's unfeasible for us to preserve savegame compatibility. You'd always backup your savegames before participating on a beta test and solely use the savegames during the beta test. It's up to your own risk to later-on take over the savegame to the release version. Again: There is the risk for you to run into issues with that save which you wouldn't have if you had only used release versions of the game!
+
+--- FAILED CHUNK 375 (Title: X4 Foundations 6.xx Changelogs) ---
+from Drill miner. * Fixed engine jet "flames" not animating correctly for several XS ships. * Fixed game having wrong resolution after choosing 1280x720 or similar small resolutions in fullscreen mode. * Fixed custom gamestart cutscenes sometimes being distorted. * Fixed looking in wrong direction when teleporting to Alligator (Liquid). * Fixed being able to fall off dock area of Phoenix. * Fixed Zeus docking position being too close to pier. * Fixed Zeus E XS dock being out of position. * Fixed Osaka missing some detail. * Fixed Terran L container storage having incorrect collisions container modules. * Fixed missing wreck for Atlas E resupplier. * Fixed Hokkaido (Mineral) internal rooms clipping through geometry. * Fixed mirrored ship ID on Prometheus. * Fixed Chthonios E (Mineral) ship ID not being shown correctly on hull. * Fixed gap on dockarea of Erlking. * Fixed paint mods being applied to surfaces they should not be used on. * Fixed door of Elite not being affected by paint
+
+--- FAILED CHUNK 378 (Title: X4 Foundations 6.xx Changelogs) ---
+filename not being loaded in Linux version. * Fixed performance stutter when approaching highly populated docks. * Fixed noticeable freeze when closing station editor for very large stations. * Fixed rare freeze during startup. * Fixed several causes of crashes. |
+
+--- FAILED CHUNK 1435 (Title: Intercept/Bombard for Commander (Assignment)) ---
+# Related
+
+* Attack with Commander
+* Defend Commander
+
+--- FAILED CHUNK 1488 (Title: Research) ---
+* Dock Module Hack
+* Production Module Hack
+* Storage Module Hack
+
+Show !
+
+|  | Energy Cells | Smart Chips | Claytronics | Graphene | Advanced Electronics | Refined Metals | Teladianium | *Σ* |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Dock Module Hack | 2,500 | 150 | 125 |  |  |  |  |
+| Production Module Hack | 2,500 | 200 |  | 300 | 225 |  |  |
+| Storage Module Hack | 2,500 |  | 50 |  |  | 500 | 400 |
+| *Total* | *7,500* | *350* | *175* | *300* | *225* | *500* | *400* |
+| *Volume Container (m³)* | *7,500* | *700* | *4,200* | *6,000* | *6,750* | *7,000* | *6,400* | ***38,550*** |
+
+Blueprint hacking research with prerequisites is as follows:
+
+* Defence Module Hack
+* Habitation Module Hack
+
+These research options have all of the first 3 hacking research options as prerequisites
+
+Show !
+
+--- FAILED CHUNK 1692 (Title: Systems Database) ---
+\_
+
+Unknown macro: confluence\_gallery. Click on this message for details.  
+The [confluence\_gallery] macro is not in the list of registered macros. Verify the spelling or contact your administrator.  
+  
+\_
+
+--- FAILED CHUNK 1736 (Title: Cardinal's Redress) ---
+\_  
+<system screenshots>  
+\_
+
+--- FAILED CHUNK 1859 (Title: Towering Wave) ---
+regular expenditures. Except for regular systems checks and test transmissions, experiments were put on hold until a sufficient threshold could be achieved; even if no Boron alive would be there to witness it.
+
+--- FAILED CHUNK 2240 (Title: Free Families Plot) ---
+# Curbs Rewards
+
+## Generic Rewards
+
+* Cobra frigate
+* Tuatara small trader
+* Chimera heavy fighter
+* “Yes, Yes, Very Interesting” Achievement (provided 4 dialogue options were correct)
+* “Fires of Fate” Achievement
+* Boa medium trader
+* “Curbed Ambitions” Achievement
+
+## Curbs-Specific Rewards
+
+* New Court of Curbs faction takes over governance of Free Families
+* New Rhak Patriarchy replaces Zyarth Patriarchy
+
+## Curbs-Specific Balance Effects
+
+The Court of Curbs near-completely seizes control as the new government of the Free Families in Tharka’s Ravine, Family Tkr and Heart of Acrimony II. Thuruk’s Demise will remain governed by the Free Families. The Court of Curbs will field a full military and will properly militarise former Free Families space against Xenon agressors.
+
+--- FAILED CHUNK 2330 (Title: User Guides (Archived)) ---
+# User Guides (Archived)
+
+Archive of user guides imported from the old version of the wiki.
+
+## Contents
+
+--- FAILED CHUNK 2751 (Title: Breaking Changes) ---
+|  |  |  |  |
+| --- | --- | --- | --- |
+| Gamestarts | 7.00 Beta 8 | **Text references** | |
+| Fields containing text references in gamestarts.xml now have full text conversion applied, allowing texts to be constructed from multiple text entries, e.g. {1234,56}\n\n{1234,78}. As a result, raw text placed in the text fields needs to be formatted accordingly, e.g. "Test start (easy)" would need to be changed to "Test start \(easy\)" to avoid the text in brackets being treated as a comment. | | | |
+| Assets | 7.00 Beta 7 | **\assets\textures\fx\highway\_fx\_electric\_02** was deleted and replaced with **\assets\textures\fx\fx\_p2\_electric\_01** | |
+| highway\_fx\_electric\_02 is still available in "legacy" folder if needed | | | |
+| Parameters | 7.00 Beta 7 | **<aiflight><skills>**: **strafespeed**, **strafeacc**, **steeringspeed**, **steeringacc** moved to separate nodes; added support for min and max values | |
+
+--- FAILED CHUNK 2780 (Title: Breaking Changes) ---
+to work with the "effective" component owner or whether your script code actually should work with the true owner of an object and update your code accordingly. On top of that the 3rd parameter of <event\_object\_changed\_owner> (trueprevious) was dropped as the event is no longer triggered upon a change of the true owner alone (i.e. only if the change of the true owner has also an effect on the "effective" component owner). | | | |
+
+--- FAILED CHUNK 2865 (Title: Highways Modding Guide) ---
+The main effects that are worth playing with are the emissive colour, contrast and brightness.
+
+Next we open highwayconfigurations.xml to make a configuration that we can reference in zonehighways.xml
+
+highwayconfigurations.xml
+
+--- FAILED CHUNK 2889 (Title: Reducing the x4.log to more relevant informations) ---
+What does this script do?  
+It cuts a bunch of lines that contain specific keywords or phrases and puts the result in a new file.  
+If a new log with the name already exist, it will be deleted before the new one is created. So you dont have to clean or delete it before you do another run and so it will not contain old errors that you maybe have fixed already .  
+It will also remove duplicated entries, so the amount of the same error should be reduced. As there are timestamps in the log, it still can contain some duplicated lines if they appear with a greate time difference. Taking this into account would make the script more complicated.  
+  
+  
+You have to create a batch (\*.bat) file and put the following lines in.  
+Adapt the variables (if necessary) in the first section:  
+  
+WORKDIR= The path where your logfile is written into.  
+LOGFILE= Name of the logfile. In default, it is x4.log
+
+--- FAILED CHUNK 2929 (Title: Clean reinstallation of graphics device drivers) ---
+Click on "Close".
+
+Once you have removed this application, or if it wasn't installed on your system anyway, uninstall the NVIDIA Graphics Driver XXX.XX entry.
+
+As before, select the entry in the Apps & features list (1) and click on "Uninstall" (2).
+
+Confirm by clicking "Uninstall" again on the popup.
+
+If another Windows confirmation dialog pops up at this point, confirm again by clicking on "Yes".
+
+This starts the uninstallation tool. Wait until it has completed its preparations and the next confirmation dialog appears, then click on "Uninstall" again.
+
+A progress window will appear, and your graphics card may reset (your screens will briefly go blank) at some point during this process. On a multi-monitor setup, monitors other than the main one may also go blank for a longer period.
+
+On the next dialog, select "Restart Now" to restart the computer and completely remove any remaining driver components.
+
+--- FAILED CHUNK 2934 (Title: Clean reinstallation of graphics device drivers) ---
+Download the latest version of the driver and install it. Note that the Download page usually provides two versions: an exe-package and a zip-package. We recommend using the exe-package, as this is easier to install.
+
+Once the driver installation has been completed, restart the system and try to run the game again.
+
+#### Installing AMD drivers
+
+On the Download page, select the device installed on your system (as noted down in the first step).
+
+For example, if you have an AMD Radeon RX 5700 XT graphics card, select: **Graphics -> AMD Radeon 5700 Series -> AMD Radeon RX 5700 Series -> AMD Radeon RX 5700 XT -> SUBMIT**. Similarly, if you have an AMD Ryzen 5 3550H with an integrated Vega graphics device, select: **Processors with graphics -> AMD Ryzen Processors -> AMD Ryzen 5 Mobile Processors with Radeon Vega Graphics -> AMD Ryzen 5 3550H -> SUBMIT**
+
+--- FAILED CHUNK 2939 (Title: Clean reinstallation of graphics device drivers) ---
+The installer will now install all the driver components. Your graphics card may reset (your screens will briefly go blank) at some point during this process.
+
+After the installation has been completed, you can adjust the settings on the final dialog before clicking on **CLOSE**.
+
+Once you have done this, restart your computer.
+
+You should now be able to start the game.
+
+--- FAILED CHUNK 2966 (Title: Exit Code 1027) ---
+# Exit Code 1027
+
+A call to a vulkan function returned vkResult -13 == VK\_ERROR\_UNKNOWN.
+
+Go to Exit Codes Table
+
+--- FAILED CHUNK 3023 (Title: Exit Code 211) ---
+### Technical details
+
+The issue is caused by a call to VkSwapchainCreateInfoKHR() (which is part of the Vulkan API) returning an error code. So far we seem to have reports about VK\_ERROR\_VALIDATION\_FAILED\_EXT (code: -1000011001) being returned in specific cases. According to the documentation, this is not supposed to happen for end users and we are trying to determine why some users seem to run into this.
+
+Go to Exit Codes Table
+
+--- FAILED CHUNK 3028 (Title: Exit Code 212) ---
+This seems to happen when the (integrated) graphics card does not have latest drivers, even if it is not the one being used. Clearly you don't want to use the (slow) integrated card, but if this card has old drivers it is known that it can cause problems with detecting the (fast) discrete card. When updating, go directly to the manufacturer's website; don't rely on Windows Update, because there are usually newer drivers available from the manufacturers.
+
+As a last resort, if you are running an NVidia discrete card and you have the latest notebook drivers for all graphics cards, but are still encountering the error, consider performing a clean driver uninstall and reinstall using notebook driver 461.92 (which is known to still work).
+
+### Ensure use of a supported graphics card
+
+--- FAILED CHUNK 3168 (Title: Exit Code 9) ---
+Normally players should not set the SteamAppId environment variable as this is purely a development feature. By removing the environment variable, you restore normal Steam behaviour and the initialization error which triggered the problem should be resolved.
+
+Go to Exit Codes Table
+

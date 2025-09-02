@@ -1,84 +1,101 @@
+# 12_generate_keywords_from_content.py (Corrected with max_tokens)
+
 import json
-from langchain.vectorstores import FAISS
-from langchain.embeddings import HuggingFaceEmbeddings
-from tqdm import tqdm
+import time
+from pathlib import Path
+from openai import OpenAI
 
 # --- Configuration ---
-INPUT_CHUNKS_FILE = "x4_wiki_chunks.json"
-VECTOR_STORE_PATH = "faiss_index"
-MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
-# Processing in batches is more memory-efficient and allows for a progress bar.
-# A batch size of 32 or 64 is a good starting point.
-BATCH_SIZE = 64
+CHUNKS_PATH = "x4_wiki_chunks.json" 
+PROMPT_PATH = "keyword_extractor_prompt.txt"
+OUTPUT_PATH = "x4_keywords.json"
+LM_STUDIO_BASE_URL = "http://localhost:1234/v1"
+API_KEY = "not-needed"
+MODEL_NAME = "local-model" 
 
-# --- Main Logic ---
-def create_vector_store_with_progress():
+def main():
     """
-    Loads text chunks, generates embeddings in batches with a progress bar,
-    and saves them to a FAISS vector store.
+    Uses an LLM to extract a comprehensive list of keywords/entities from the
+    pre-chunked wiki data. Now explicitly sets max_tokens to prevent output truncation.
     """
-    print("--- Starting Phase 2: Embedding and Storing ---")
-
-    # 1. Load the processed chunks
-    try:
-        with open(INPUT_CHUNKS_FILE, 'r', encoding='utf-8') as f:
-            chunks = json.load(f)
-        print(f"Loaded {len(chunks)} chunks from '{INPUT_CHUNKS_FILE}'.")
-    except FileNotFoundError:
-        print(f"Error: Chunks file not found at '{INPUT_CHUNKS_FILE}'.")
-        return
-
-    # 2. Initialize the embedding model
-    print(f"Loading embedding model '{MODEL_NAME}'...")
-    model_kwargs = {'device': 'cpu'}
-    encode_kwargs = {'normalize_embeddings': False}
-    embeddings = HuggingFaceEmbeddings(
-        model_name=MODEL_NAME,
-        model_kwargs=model_kwargs,
-        encode_kwargs=encode_kwargs
-    )
-    print("Embedding model loaded successfully.")
-
-    # 3. Prepare texts and metadata
-    texts = [chunk['content'] for chunk in chunks]
-    metadatas = [{'source': chunk['source'], 'title': chunk['title']} for chunk in chunks]
-
-    # 4. Create the FAISS vector store in batches
-    print(f"Creating FAISS vector store from {len(texts)} texts in batches of {BATCH_SIZE}...")
+    # --- 1. Initialization ---
+    client = OpenAI(base_url=LM_STUDIO_BASE_URL, api_key=API_KEY)
     
-    vector_store = None
-    # This loop iterates through the texts in steps of BATCH_SIZE
-    for i in tqdm(range(0, len(texts), BATCH_SIZE), desc="Embedding and Indexing Chunks"):
-        # Select the current batch of texts and metadatas
-        batch_texts = texts[i:i + BATCH_SIZE]
-        batch_metadatas = metadatas[i:i + BATCH_SIZE]
-        
-        if vector_store is None:
-            # For the first batch, create the vector store
-            vector_store = FAISS.from_texts(
-                texts=batch_texts,
-                embedding=embeddings,
-                metadatas=batch_metadatas
-            )
-        else:
-            # For subsequent batches, add to the existing store
-            vector_store.add_texts(
-                texts=batch_texts,
-                metadatas=batch_metadatas
-            )
-
-    if not vector_store:
-        print("Error: Vector store was not created. No chunks were processed.")
+    chunks_file = Path(CHUNKS_PATH)
+    prompt_file = Path(PROMPT_PATH)
+    
+    if not chunks_file.exists() or not prompt_file.exists():
+        print(f"Error: Make sure '{CHUNKS_PATH}' and '{PROMPT_PATH}' exist.")
         return
 
-    print("\nVector store created successfully.")
+    print("Loading pre-chunked data and prompt...")
+    with open(chunks_file, "r", encoding="utf-8") as f:
+        chunk_data = json.load(f)
+    with open(prompt_file, "r", encoding="utf-8") as f:
+        prompt_template = f.read()
 
-    # 5. Save the vector store to disk
-    print(f"Saving vector store to '{VECTOR_STORE_PATH}'...")
-    vector_store.save_local(VECTOR_STORE_PATH)
-    print("--- Embedding and Storing complete! ---")
-    print(f"Your knowledge base is now ready at '{VECTOR_STORE_PATH}'.")
+    all_keywords = set()
+    total_chunks = len(chunk_data)
+    print(f"Found {total_chunks} chunks to process. This will take a while...")
+
+    # --- 2. Main Processing Loop ---
+    for i, chunk in enumerate(chunk_data):
+        content = chunk.get("content", "")
+        title = chunk.get("title", f"chunk_{i}")
+        
+        print(f"--- Processing chunk {i+1}/{total_chunks} (from doc: {title}) ---")
+        
+        all_keywords.add(title.strip())
+
+        if not content.strip():
+            print("Skipping due to empty content.")
+            continue
+        
+        formatted_prompt = prompt_template.format(content=content)
+        
+        try:
+            # --- THIS IS THE UPDATED SECTION ---
+            response = client.chat.completions.create(
+                model=MODEL_NAME,
+                messages=[{"role": "user", "content": formatted_prompt}],
+                temperature=0.0,
+                max_tokens=4096  # Explicitly request a larger output buffer
+            )
+            # ------------------------------------
+            
+            response_text = response.choices[0].message.content
+            cleaned_response = response_text.strip().replace("```json", "").replace("```", "").strip()
+            extracted_keywords = json.loads(cleaned_response)
+            
+            if isinstance(extracted_keywords, list):
+                sanitized = {str(k).strip() for k in extracted_keywords if k and isinstance(k, str)}
+                print(f"Extracted {len(sanitized)} new keywords from chunk.")
+                all_keywords.update(sanitized)
+            else:
+                print("Warning: LLM did not return a list.")
+
+        except json.JSONDecodeError:
+            print(f"Error: Failed to decode JSON from LLM response for chunk.")
+            print(f"LLM Raw Response:\n{response_text[:200]}...")
+        except Exception as e:
+            print(f"An unexpected error occurred for chunk: {e}")
+
+    # --- 3. Save the final output ---
+    print("\n--- Processing complete. Finalizing keyword list. ---")
+    sorted_keywords = sorted([k for k in all_keywords if k])
+    
+    output_data = {
+        "description": "A comprehensive list of keywords extracted from the content of all wiki chunks using an LLM.",
+        "count": len(sorted_keywords),
+        "keywords": sorted_keywords
+    }
+
+    with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
+        json.dump(output_data, f, indent=2)
+
+    print(f"Successfully generated {len(sorted_keywords)} unique keywords.")
+    print(f"Keyword list saved to '{OUTPUT_PATH}'")
 
 
 if __name__ == "__main__":
-    create_vector_store_with_progress()
+    main()
