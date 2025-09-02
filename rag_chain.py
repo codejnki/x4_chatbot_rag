@@ -82,8 +82,18 @@ class X4RAGChain:
         research_chain = self.researcher_prompt_template | self.researcher_model
 
         logger.info("--- Running Researcher Step ---")
-        response = await research_chain.ainvoke({"question": question, "context": context_str})
-        synthesized_context = response.content
+        
+        # --- RECOMMENDED CHANGE START ---
+        try:
+            # Log the data being sent to the LLM for debugging
+            logger.debug(f"Researcher request payload:\nQuestion: {question}\nContext Length: {len(context_str)}")
+            
+            response = await research_chain.ainvoke({"question": question, "context": context_str})
+            synthesized_context = response.content
+        except APIError as e:
+            logger.error(f"API Error during Researcher step: {e}")
+            return "NO_CLEAR_ANSWER" # Return a failure signal
+        # --- RECOMMENDED CHANGE END ---
 
         if "NO_CLEAR_ANSWER" in synthesized_context or not synthesized_context.strip():
             logger.info("--- Researcher found no clear answer. ---")
