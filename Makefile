@@ -9,24 +9,26 @@ PAGES_DIR := $(WIKI_DIR)/pages
 VENV_DIR := .venv
 
 # OS-specific configuration
-# This automatically detects the operating system to set correct paths.
 ifeq ($(OS),Windows_NT)
     # Windows settings
     PY := python
     VENV_PATH_DIR := Scripts
     ACTIVATE_CMD := .\\$(VENV_DIR)\\Scripts\\activate
-    # Use native command to remove directory, as 'rm -rf' might not be available
     RM_RF = cmd /c rmdir /s /q
+    # Use 7-Zip on Windows to handle long file paths.
+    # Assumes '7z.exe' is in your system PATH.
+    # You can install it with 'winget install -e --id 7zip.7zip'
+    UNZIP_CMD = 7z x $(ZIP_FILE) -o$(WIKI_DIR) pages -y
 else
     # Unix-like (Linux, macOS) settings
     PY := python3
     VENV_PATH_DIR := bin
     ACTIVATE_CMD := source $(VENV_DIR)/bin/activate
     RM_RF = rm -rf
+    UNZIP_CMD = unzip -oq $(ZIP_FILE) 'pages/*' -d $(WIKI_DIR)
 endif
 
 # Define the Python interpreter from within the virtual environment
-# This makes our commands venv-specific
 PYTHON := $(VENV_DIR)/$(VENV_PATH_DIR)/python
 PIP := $(VENV_DIR)/$(VENV_PATH_DIR)/pip
 
@@ -36,8 +38,7 @@ REQUIREMENTS := requirements.txt
 # By default, running 'make' will run the 'install' target
 .DEFAULT_GOAL := install
 
-# Phony targets are not files. This prevents 'make' from getting confused if
-# a file with the same name as a target exists.
+# Phony targets are not files.
 .PHONY: install venv data clean freeze help
 
 # Install dependencies
@@ -47,7 +48,6 @@ install: venv
 	@echo "--> Dependencies installed successfully."
 
 # Create virtual environment if it doesn't exist
-# The target is the 'pip' executable inside the venv. If it exists, the venv is considered set up.
 venv: $(PIP)
 $(PIP):
 	@echo "--> Creating virtual environment in $(VENV_DIR)..."
@@ -55,14 +55,12 @@ $(PIP):
 	@echo "--> Virtual environment created."
 	@echo "--> To activate it, run: $(ACTIVATE_CMD)"
 
-# Unzip the wiki data. This target is idempotent.
-# Note: Requires the 'unzip' command-line tool. On Windows, this is available
-# through tools like Git Bash or Cygwin.
+# Unzip the wiki data.
 data: $(PAGES_DIR)
 $(PAGES_DIR): $(ZIP_FILE)
 	@echo "--> Unzipping wiki data from $(ZIP_FILE)..."
-	unzip -oq $(ZIP_FILE) 'pages/*' -d $(WIKI_DIR)
-	@echo "--> Wiki data is ready in $(PAGES_DIR)"
+	$(UNZIP_CMD)
+	@echo "--> Wiki data is ready."
 
 # Freeze dependencies
 freeze: venv

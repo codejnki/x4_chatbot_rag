@@ -24,3 +24,11 @@ With the prerequisites installed, setting up the project is a single command. Op
 ```sh
 make install
 ```
+
+### Wiki Data
+
+We first need to unpack our copy of the X4 community wiki.  Open the terminal in the project's root directory and run:
+
+```sh
+make data
+```
