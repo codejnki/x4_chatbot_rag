@@ -4,8 +4,10 @@
 ZIP_FILE := x4-foundations-wiki.zip
 WIKI_DIR := x4-foundations-wiki
 PAGES_DIR := $(WIKI_DIR)/pages
+UNZIP_STAMP := $(WIKI_DIR)/.unzipped
 
 # Python scripts and generated files
+UNZIP_SCRIPT := 00_unzip_data.py
 CORPUS_SCRIPT := 01_generate_corpus.py
 CORPUS_FILE := x4_wiki_corpus.json
 CHUNK_SCRIPT := 02_chunk_corpus.py
@@ -25,13 +27,11 @@ VENV_DIR := .venv
 ifeq ($(OS),Windows_NT)
     PY := python
     VENV_PATH_DIR := Scripts
-    UNZIP_CMD = 7z x $(ZIP_FILE) -o$(WIKI_DIR) pages -y
     RM_RF = cmd /c rmdir /s /q
     EXE := .exe
 else
     PY := python3
     VENV_PATH_DIR := bin
-    UNZIP_CMD = unzip -oq $(ZIP_FILE) 'pages/*' -d $(WIKI_DIR)
     RM_RF = rm -rf
     EXE :=
 endif
@@ -96,15 +96,19 @@ $(CHUNKS_FILE): $(CORPUS_FILE) $(CHUNK_SCRIPT)
 
 # Create the JSON corpus from the HTML files.
 corpus: $(CORPUS_FILE)
-$(CORPUS_FILE): $(PAGES_DIR) $(CORPUS_SCRIPT)
+$(CORPUS_FILE): $(UNZIP_STAMP) $(CORPUS_SCRIPT)
 	@echo "--> Generating wiki corpus from HTML files..."
 	$(PYTHON) $(CORPUS_SCRIPT)
 
 # Unzip the wiki data.
-data: $(PAGES_DIR)
-$(PAGES_DIR): $(ZIP_FILE) $(UNZIP_SCRIPT)
+data: $(UNZIP_STAMP)
+
+# --- THIS IS THE FIX ---
+# Use Python to create the stamp file, which is OS-agnostic.
+$(UNZIP_STAMP): $(ZIP_FILE) $(UNZIP_SCRIPT)
 	@echo "--> Unzipping and sanitizing wiki data..."
 	$(PYTHON) $(UNZIP_SCRIPT)
+	$(PYTHON) -c "import pathlib; pathlib.Path('$(UNZIP_STAMP)').touch()"
 
 # --- Utility Targets ---
 
@@ -119,6 +123,7 @@ clean:
 	-$(RM_RF) $(WIKI_DIR)
 	-rm -f $(CORPUS_FILE) $(CHUNKS_FILE) $(KEYWORDS_FILE) $(REFINED_KEYWORDS_FILE)
 	-$(RM_RF) $(VECTOR_STORE_DIR)
+	-rm -f $(UNZIP_STAMP)
 	find . -type f -name "*.pyc" -delete
 	find . -type d -name "__pycache__" -delete
 	@echo "--> Cleanup complete."

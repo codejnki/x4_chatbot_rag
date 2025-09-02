@@ -8,64 +8,61 @@ from tqdm import tqdm
 
 # --- Configuration ---
 ZIP_FILE = Path("x4-foundations-wiki.zip")
-EXTRACT_DIR = Path("x4-foundations-wiki")
-PATH_MAP_FILE = EXTRACT_DIR / "path_map.json"
-MAX_PATH_COMPONENT_LEN = 50 # A safe length for directory names
-
-def sanitize_path(path_str: str, path_map: dict) -> Path:
-    """
-    Sanitizes a given path string. If a directory component is too long,
-    it's replaced with a hash, and the mapping is stored.
-    """
-    parts = path_str.split('/')
-    sanitized_parts = []
-    for part in parts:
-        if len(part) > MAX_PATH_COMPONENT_LEN:
-            # Create a short, deterministic hash of the long part
-            hashed_part = hashlib.md5(part.encode()).hexdigest()
-            # Store the mapping from the hash back to the original
-            path_map[hashed_part] = part
-            sanitized_parts.append(hashed_part)
-        else:
-            sanitized_parts.append(part)
-    return Path(*sanitized_parts)
+EXTRACT_ROOT_DIR = Path("x4-foundations-wiki")
+SANITIZED_DIR = EXTRACT_ROOT_DIR / "hashed_pages"
+PATH_MAP_FILE = EXTRACT_ROOT_DIR / "path_map.json"
+TARGET_FILENAME = "WebHome.html"
 
 def main():
     """
-    Extracts the wiki data, sanitizing long file paths by replacing them with
-    hashes and creating a JSON map to preserve the original names.
+    Extracts only the 'WebHome.html' files from the wiki zip, renaming them
+    based on a hash of their original path to create a clean, flat directory
+    structure that avoids all path length issues.
     """
     if not ZIP_FILE.exists():
-        print(f"Error: Zip file not found at '{ZIP_FILE}'.")
+        print(f"Error: Zip file not found at '{ZIP_FILE}'. Please download the wiki data.")
         return
 
-    print(f"--> Unzipping and sanitizing wiki data from '{ZIP_FILE}'...")
+    print(f"--> Sanitizing and extracting '{ZIP_FILE}'...")
     
-    EXTRACT_DIR.mkdir(exist_ok=True)
+    # --- THIS IS THE FIX ---
+    # The 'parents=True' argument ensures that the parent directory
+    # (x4-foundations-wiki) is created if it doesn't exist.
+    SANITIZED_DIR.mkdir(parents=True, exist_ok=True)
+    # --- END FIX ---
+    
     path_map = {}
 
     with zipfile.ZipFile(ZIP_FILE, 'r') as zip_ref:
-        file_list = zip_ref.infolist()
-        for member in tqdm(file_list, desc="Sanitizing and extracting"):
-            # Don't process directories themselves
-            if member.is_dir():
-                continue
+        # Find only the content pages we care about
+        file_list = [f for f in zip_ref.infolist() if f.filename.endswith(TARGET_FILENAME)]
 
+        for member in tqdm(file_list, desc="Hashing and extracting pages"):
             original_path_str = member.filename
-            sanitized_path = EXTRACT_DIR / sanitize_path(original_path_str, path_map)
             
-            # Ensure the parent directory for the sanitized path exists
-            sanitized_path.parent.mkdir(parents=True, exist_ok=True)
+            # Create a unique and deterministic ID from the original path
+            path_hash = hashlib.md5(original_path_str.encode()).hexdigest()
+            
+            # Create a 2-level nested directory to avoid too many files in one folder
+            dir1 = path_hash[0:2]
+            dir2 = path_hash[2:4]
+            new_filename = f"{path_hash[4:]}.html"
+            
+            new_path = SANITIZED_DIR / dir1 / dir2 / new_filename
+            
+            relative_new_path_key = f"{dir1}/{dir2}/{new_filename}"
+            path_map[relative_new_path_key] = original_path_str
 
             # Extract the file to the new sanitized path
-            with zip_ref.open(member) as source, open(sanitized_path, "wb") as target:
+            new_path.parent.mkdir(parents=True, exist_ok=True)
+            with zip_ref.open(member) as source, open(new_path, "wb") as target:
                 target.write(source.read())
 
     # Save the map file for the next script to use
     with open(PATH_MAP_FILE, 'w', encoding='utf-8') as f:
         json.dump(path_map, f, indent=2)
 
-    print(f"--> Unzipping complete. Path map saved to '{PATH_MAP_FILE}'.")
+    print(f"--> Extraction complete. {len(path_map)} pages extracted to '{SANITIZED_DIR}'.")
 
 if __name__ == "__main__":
     main()
