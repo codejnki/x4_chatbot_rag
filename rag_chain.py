@@ -1,4 +1,4 @@
-# rag_chain.py (Corrected)
+# rag_chain.py (Final Version with Re-ranking)
 
 import json
 from pathlib import Path
@@ -9,12 +9,19 @@ from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain.chains.combine_documents import create_stuff_documents_chain
+
+# --- NEW: Imports for Re-ranking ---
+from langchain.retrievers import ContextualCompressionRetriever
+from langchain.retrievers.document_compressors import CrossEncoderReranker
+from langchain_community.cross_encoders import HuggingFaceCrossEncoder
+# ------------------------------------
+
 from typing import AsyncGenerator, List, Dict, Optional
 from thefuzz import process, fuzz
 
 class X4RAGChain:
     """
-    Implements a two-stage "Researcher/Actor" RAG pipeline.
+    Implements a two-stage "Researcher/Actor" RAG pipeline with a re-ranking step.
     """
     def _load_text_file(self, file_path: str, description: str) -> str:
         path = Path(file_path)
@@ -39,8 +46,21 @@ class X4RAGChain:
         print(f"Loaded {len(self.keywords)} refined keywords.")
 
         embeddings = HuggingFaceEmbeddings(model_name=model_name)
-        self.vectorstore = FAISS.load_local(vector_store_path, embeddings, allow_dangerous_deserialization=True)
-        self.retriever = self.vectorstore.as_retriever(search_kwargs={"k": 3})
+        base_vectorstore = FAISS.load_local(vector_store_path, embeddings, allow_dangerous_deserialization=True)
+        base_retriever = base_vectorstore.as_retriever(search_kwargs={"k": 18})
+
+        # --- NEW: Setup the Re-ranking Retriever ---
+        # The CrossEncoder model is specifically trained to predict the similarity
+        # between a question and a document.
+        reranker_model = HuggingFaceCrossEncoder(model_name="BAAI/bge-reranker-base")
+        compressor = CrossEncoderReranker(model=reranker_model, top_n=5)
+        
+        # The ContextualCompressionRetriever wraps our base retriever. It retrieves
+        # the initial 18 documents and then uses the compressor to re-rank and filter them.
+        self.retriever = ContextualCompressionRetriever(
+            base_compressor=compressor, base_retriever=base_retriever
+        )
+        # ---------------------------------------------
         
         self.actor_model = ChatOpenAI(base_url="http://localhost:1234/v1", api_key="not-needed", temperature=0.7)
         self.researcher_model = ChatOpenAI(base_url="http://localhost:1234/v1", api_key="not-needed", temperature=0.0)
@@ -57,21 +77,15 @@ class X4RAGChain:
         good_matches = [match[0] for match in all_matches if match[1] >= 90]
         return list(set(good_matches))
 
-    # We'll add 'keywords' as a parameter here
-    async def _run_researcher_step(self, keywords: List[str], documents: List[Document]) -> Optional[str]:
+    async def _run_researcher_step(self, question: str, documents: List[Document]) -> Optional[str]:
         if not documents: return None
-        
-        # --- THIS IS THE KEY CHANGE ---
-        # Instead of the user's raw question, we create a new, factual one for the researcher.
-        researcher_question = f"Summarize the key information about the following topics based on the provided text: {', '.join(keywords)}"
         
         context_str = "\n\n---\n\n".join([f"Source: {doc.metadata.get('title', 'Unknown')}\n\n{doc.page_content}" for doc in documents])
         
         research_chain = self.researcher_prompt_template | self.researcher_model
         
         print("--- Running Researcher Step ---")
-        # Use the new, synthetic question here
-        response = await research_chain.ainvoke({"question": researcher_question, "context": context_str})
+        response = await research_chain.ainvoke({"question": question, "context": context_str})
         synthesized_context = response.content
         
         if "NO_CLEAR_ANSWER" in synthesized_context or not synthesized_context.strip():
@@ -81,23 +95,19 @@ class X4RAGChain:
         print(f"--- Researcher synthesized context: ---\n{synthesized_context}\n--------------------")
         return synthesized_context
 
-
     async def _get_context_stream(self, question: str, chat_history: List[BaseMessage]) -> AsyncGenerator[Dict, None]:
         keywords = self._find_all_entities_in_query(question)
         final_context_str: Optional[str] = None
 
         if keywords:
-            print(f"Found keywords: {keywords}. Retrieving and researching...")
-            all_docs = []
-            seen_content = set()
-            for keyword in keywords:
-                docs = await self.retriever.ainvoke(keyword)
-                for doc in docs:
-                    if doc.page_content not in seen_content:
-                        all_docs.append(doc)
-                        seen_content.add(doc.page_content)
-            # Pass the original user question AND the keywords to the researcher step
-            final_context_str = await self._run_researcher_step(keywords, all_docs)
+            print(f"Found keywords: {keywords}. Retrieving, re-ranking, and researching...")
+            
+            # --- UPDATED: Use the original question for re-ranking ---
+            retrieved_docs = await self.retriever.ainvoke(question)
+            
+            # The researcher now receives the user's actual question, not the synthetic one.
+            final_context_str = await self._run_researcher_step(question, retrieved_docs)
+            # --------------------------------------------------------
 
         if not final_context_str:
             print("Fallback: No keywords found or researcher failed. Using simple semantic retrieval.")
