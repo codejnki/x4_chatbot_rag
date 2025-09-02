@@ -102,9 +102,9 @@ $(CORPUS_FILE): $(PAGES_DIR) $(CORPUS_SCRIPT)
 
 # Unzip the wiki data.
 data: $(PAGES_DIR)
-$(PAGES_DIR): $(ZIP_FILE)
-	@echo "--> Unzipping wiki data from $(ZIP_FILE)..."
-	$(UNZIP_CMD)
+$(PAGES_DIR): $(ZIP_FILE) $(UNZIP_SCRIPT)
+	@echo "--> Unzipping and sanitizing wiki data..."
+	$(PYTHON) $(UNZIP_SCRIPT)
 
 # --- Utility Targets ---
 
