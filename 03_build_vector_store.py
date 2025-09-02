@@ -1,81 +1,67 @@
-from langchain.vectorstores import FAISS
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_community.chat_models import ChatOllama
-from langchain_core.runnables import RunnablePassthrough
-from langchain_core.output_parsers import StrOutputParser
+# 03_build_vector_store.py
+
+import json
+from langchain_community.vectorstores import FAISS
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_core.documents import Document
+from tqdm import tqdm
 
 # --- Configuration ---
+CHUNKS_FILE = "x4_wiki_chunks.json"
 VECTOR_STORE_PATH = "faiss_index"
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
-# This should match the model you are serving with LM Studio
-LLM_MODEL_NAME = "Meta-Llama-3-8B-Instruct-GGUF" 
 
-# --- Main Logic ---
 def main():
     """
-    Loads the vector store and the LLM, then runs a RAG query.
+    Loads document chunks, generates embeddings using a HuggingFace model,
+    and creates and saves a FAISS vector store.
     """
-    print("--- Starting Phase 3: Retrieval and Generation ---")
+    print("--- Starting Phase 3: Building Vector Store ---")
 
-    # 1. Load the existing vector store and embedding model
-    print("Loading vector store and embedding model...")
-    model_kwargs = {'device': 'cpu'}
-    encode_kwargs = {'normalize_embeddings': False}
+    # 1. Load the pre-chunked documents
+    try:
+        with open(CHUNKS_FILE, 'r', encoding='utf-8') as f:
+            chunks_data = json.load(f)
+        print(f"Loaded {len(chunks_data)} document chunks from '{CHUNKS_FILE}'.")
+    except FileNotFoundError:
+        print(f"Error: Chunks file not found at '{CHUNKS_FILE}'. Please run 'make chunks' first.")
+        return
+
+    # Convert dictionary chunks into LangChain Document objects
+    # This is necessary for the FAISS vector store creation process.
+    documents = [
+        Document(
+            page_content=chunk.get("content", ""),
+            metadata={
+                "source": chunk.get("source", "Unknown"),
+                "title": chunk.get("title", "Untitled"),
+                "chunk_index": chunk.get("chunk_index", 0)
+            }
+        ) for chunk in chunks_data
+    ]
+
+    # 2. Initialize the embedding model
+    print(f"Initializing embedding model '{MODEL_NAME}'...")
+    # By specifying encode_kwargs, we ensure embeddings are normalized, which is good practice for similarity search.
     embeddings = HuggingFaceEmbeddings(
         model_name=MODEL_NAME,
-        model_kwargs=model_kwargs,
-        encode_kwargs=encode_kwargs
+        encode_kwargs={'normalize_embeddings': True}
     )
-    vector_store = FAISS.load_local(VECTOR_STORE_PATH, embeddings, allow_dangerous_deserialization=True)
-    # The allow_dangerous_deserialization flag is needed for loading FAISS indexes created with older LangChain versions.
-    # It's safe in our context as we created the file ourselves.
-    
-    retriever = vector_store.as_retriever()
-    print("Vector store loaded successfully.")
+    print("Embedding model initialized successfully.")
 
-    # 2. Initialize the LLM from the local LM Studio server
-    print(f"Initializing LLM '{LLM_MODEL_NAME}' from local server...")
-    llm = ChatOllama(model=LLM_MODEL_NAME)
-    print("LLM initialized.")
+    # 3. Create the FAISS vector store from the documents and embeddings
+    print("Building FAISS vector store. This will take some time...")
+    # We'll process the documents in batches to show progress with tqdm
+    vector_store = FAISS.from_documents(documents, embeddings)
 
-    # 3. Define the RAG prompt template
-    template = """
-    You are an expert assistant for the game X4 Foundations.
-    Use the following retrieved context from the game's wiki to answer the user's question.
-    If you don't know the answer from the provided context, just say that you don't know.
-    Keep your answer concise and helpful.
+    print("Vector store built successfully.")
 
-    Context:
-    {context}
+    # 4. Save the vector store locally
+    print(f"Saving vector store to '{VECTOR_STORE_PATH}'...")
+    vector_store.save_local(VECTOR_STORE_PATH)
+    print(f"Vector store saved successfully.")
+    print("\n--- Data pipeline complete! ---")
 
-    Question:
-    {question}
-
-    Answer:
-    """
-    prompt = ChatPromptTemplate.from_template(template)
-
-    # 4. Create the RAG chain
-    # This chain defines the entire RAG process.
-    chain = (
-        {"context": retriever, "question": RunnablePassthrough()}
-        | prompt
-        | llm
-        | StrOutputParser()
-    )
-
-    # 5. Ask a question
-    print("\n--- Running Query ---")
-    question = "How do I dock my ship?"
-    print(f"Question: {question}")
-    
-    # The .invoke() method runs the chain with the given input.
-    response = chain.invoke(question)
-    
-    print("\n--- LLM Response ---")
-    print(response)
-    print("\n--- RAG process complete ---")
 
 if __name__ == "__main__":
     main()
