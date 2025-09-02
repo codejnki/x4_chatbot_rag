@@ -1,8 +1,10 @@
-# rag_chain.py (Final Version with Re-ranking and State Fix)
+# rag_chain.py (Final Version with Improved Fallback)
 
 import json
 import logging
+import tiktoken
 from pathlib import Path
+from openai import APIError
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import BaseMessage
@@ -18,9 +20,15 @@ from thefuzz import process, fuzz
 
 logger = logging.getLogger(__name__)
 
+# --- Configuration for Context Management ---
+MAX_CONTEXT_TOKENS = 6000
+tokenizer = tiktoken.get_encoding("cl100k_base")
+
+
 class X4RAGChain:
     """
-    Implements a two-stage "Researcher/Actor" RAG pipeline with a re-ranking step.
+    Implements a two-stage "Researcher/Actor" RAG pipeline with a re-ranking step
+    and robust context window management.
     """
     def _load_text_file(self, file_path: str, description: str) -> str:
         path = Path(file_path)
@@ -46,7 +54,7 @@ class X4RAGChain:
 
         embeddings = HuggingFaceEmbeddings(model_name=model_name)
         base_vectorstore = FAISS.load_local(vector_store_path, embeddings, allow_dangerous_deserialization=True)
-        base_retriever = base_vectorstore.as_retriever(search_kwargs={"k": 50})
+        base_retriever = base_vectorstore.as_retriever(search_kwargs={"k": 10})
 
         reranker_model = HuggingFaceCrossEncoder(model_name="BAAI/bge-reranker-base")
         compressor = CrossEncoderReranker(model=reranker_model, top_n=7)
@@ -58,9 +66,6 @@ class X4RAGChain:
         self.actor_model = ChatOpenAI(base_url="http://localhost:1234/v1", api_key="not-needed", temperature=0.7)
         self.researcher_model = ChatOpenAI(base_url="http://localhost:1234/v1", api_key="not-needed", temperature=0.0)
 
-        # --- THIS IS THE FIX ---
-        # We now explicitly include a placeholder for the context, which is required
-        # by the create_stuff_documents_chain function.
         actor_prompt_template = ChatPromptTemplate.from_messages([
             ("system", self.base_system_prompt),
             ("system", "Context from the X4 Foundations wiki:\n{context}"),
@@ -75,31 +80,58 @@ class X4RAGChain:
         return list(set(good_matches))
 
     async def _run_researcher_step(self, question: str, documents: List[Document]) -> Optional[str]:
-        if not documents: return None
-
-        context_str = "\n\n---\n\n".join([f"Source: {doc.metadata.get('title', 'Unknown')}\n\n{doc.page_content}" for doc in documents])
-
-        research_chain = self.researcher_prompt_template | self.researcher_model
-
-        logger.info("--- Running Researcher Step ---")
-        
-        # --- RECOMMENDED CHANGE START ---
-        try:
-            # Log the data being sent to the LLM for debugging
-            logger.debug(f"Researcher request payload:\nQuestion: {question}\nContext Length: {len(context_str)}")
-            
-            response = await research_chain.ainvoke({"question": question, "context": context_str})
-            synthesized_context = response.content
-        except APIError as e:
-            logger.error(f"API Error during Researcher step: {e}")
-            return "NO_CLEAR_ANSWER" # Return a failure signal
-        # --- RECOMMENDED CHANGE END ---
-
-        if "NO_CLEAR_ANSWER" in synthesized_context or not synthesized_context.strip():
-            logger.info("--- Researcher found no clear answer. ---")
+        if not documents:
             return None
 
-        logger.info(f"--- Researcher synthesized context: ---\n{synthesized_context}\n--------------------")
+        research_chain = self.researcher_prompt_template | self.researcher_model
+        
+        batches = []
+        current_batch = []
+        current_tokens = 0
+
+        for doc in documents:
+            doc_content = f"Source: {doc.metadata.get('title', 'Unknown')}\n\n{doc.page_content}"
+            doc_tokens = len(tokenizer.encode(doc_content))
+
+            if current_tokens + doc_tokens > MAX_CONTEXT_TOKENS:
+                if current_batch:
+                    batches.append("\n\n---\n\n".join(current_batch))
+                current_batch = [doc_content]
+                current_tokens = doc_tokens
+            else:
+                current_batch.append(doc_content)
+                current_tokens += doc_tokens
+        
+        if current_batch:
+            batches.append("\n\n---\n\n".join(current_batch))
+
+        logger.info(f"Created {len(batches)} batch(es) for the researcher step.")
+
+        summaries = []
+        for i, batch in enumerate(batches):
+            logger.info(f"--- Running Researcher on Batch {i+1}/{len(batches)} ---")
+            try:
+                response = await research_chain.ainvoke({"question": question, "context": batch})
+                summary = response.content
+                if "NO_CLEAR_ANSWER" not in summary and summary.strip():
+                    summaries.append(summary)
+            except APIError as e:
+                logger.error(f"API Error during researcher batch {i+1}: {e}")
+                continue
+
+        if not summaries:
+            logger.info("--- Researcher found no clear answer in any batch. ---")
+            return None
+
+        if len(summaries) > 1:
+            logger.info("--- Consolidating multiple researcher summaries ---")
+            combined_summaries = "\n\n---\n\n".join(summaries)
+            final_response = await research_chain.ainvoke({"question": question, "context": combined_summaries})
+            synthesized_context = final_response.content
+        else:
+            synthesized_context = summaries[0]
+            
+        logger.info(f"--- Final Researcher synthesized context: ---\n{synthesized_context}\n--------------------")
         return synthesized_context
 
     async def _get_context_stream(self, question: str, chat_history: List[BaseMessage]) -> AsyncGenerator[Dict, None]:
@@ -111,15 +143,20 @@ class X4RAGChain:
             retrieved_docs = await self.retriever.ainvoke(question)
             final_context_str = await self._run_researcher_step(question, retrieved_docs)
 
+        # --- IMPROVED FALLBACK LOGIC ---
         if not final_context_str:
-            logger.info("Fallback: No keywords found or researcher failed. Using simple semantic retrieval.")
-            docs = await self.retriever.ainvoke(question)
-            final_context_str = "\n\n".join([doc.page_content for doc in docs])
+            logger.info("Fallback: No keywords found or researcher failed. Using simple semantic retrieval with researcher pass.")
+            # Retrieve the top 5 documents semantically
+            docs = await self.retriever.ainvoke(question, top_k=5) 
+            # Run these documents through the same robust researcher step
+            final_context_str = await self._run_researcher_step(question, docs)
 
+        # If all attempts fail, provide a clear "I don't know" message.
+        if not final_context_str:
+            final_context_str = "NO_CLEAR_ANSWER"
+        
         final_documents = [Document(page_content=final_context_str)]
 
-        # --- THIS IS THE FIX: Pass an empty list for chat_history ---
-        # This forces the Actor to be stateless and only focus on the current question and context.
         async for chunk in self.actor_chain.astream({
             "input": question,
             "chat_history": [],
