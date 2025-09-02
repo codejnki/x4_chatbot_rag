@@ -38,37 +38,62 @@ def get_chunk_hash(chunk):
 
 def extract_json_from_string(text):
     """
-    Finds and extracts a JSON array from a string, attempting to repair if truncated.
+    Finds and extracts a JSON object or array from a string,
+    attempting to repair common LLM-induced formatting errors.
     """
-    # 1. First, try to find a complete JSON array
-    match = re.search(r'\[.*\]', text, re.DOTALL)
-    if match:
-        try:
-            # If this works, the JSON is well-formed
-            json.loads(match.group(0))
-            return match.group(0)
-        except json.JSONDecodeError:
-            # It's not well-formed, so we'll fall through to the repair logic
-            pass
-
-    # 2. If no complete array is found, try to repair a truncated one
     text = text.strip()
-    if text.startswith('['):
-        # Find the last comma in the string
-        last_comma_index = text.rfind(',')
-        if last_comma_index != -1:
-            # Reconstruct the string up to the last complete element and close it
-            repaired_json_str = text[:last_comma_index] + "\n]"
+
+    # Attempt to find the start and end of a JSON structure
+    start_bracket = text.find('[')
+    start_brace = text.find('{')
+    
+    start_index = -1
+    
+    # Find the first opening bracket or brace
+    if start_bracket != -1 and start_brace != -1:
+        start_index = min(start_bracket, start_brace)
+    elif start_bracket != -1:
+        start_index = start_bracket
+    elif start_brace != -1:
+        start_index = start_brace
+    else:
+        return None # No JSON structure found
+
+    # Determine the expected closing character
+    expected_closing = ']' if text[start_index] == '[' else '}'
+
+    # Attempt to find the last closing character
+    end_index = text.rfind(expected_closing)
+
+    # --- Repair Logic ---
+    # 1. If the opening bracket/brace is present but the closing one is not
+    if end_index == -1:
+        text += expected_closing
+        end_index = len(text) - 1
+        print(f"Repaired by adding a closing '{expected_closing}'.")
+
+    # 2. Extract the potential JSON string
+    json_str = text[start_index : end_index + 1]
+
+    # 3. Attempt to parse, with a fallback for truncated arrays
+    try:
+        json.loads(json_str)
+        return json_str
+    except json.JSONDecodeError:
+        # If it's an array that failed, try removing the last element
+        if json_str.startswith('[') and ',' in json_str:
+            last_comma_index = json_str.rfind(',')
+            repaired_json_str = json_str[:last_comma_index] + "\n]"
             try:
-                # Check if the repaired string is now valid JSON
                 json.loads(repaired_json_str)
-                print("Repaired a truncated JSON response.")
+                print("Repaired a truncated JSON array response.")
                 return repaired_json_str
             except json.JSONDecodeError:
-                pass # Repair failed
+                pass # Final repair attempt failed
 
-    # 3. If all else fails, return None
+    # If all else fails
     return None
+
 
 def process_chunk(chunk):
     """
