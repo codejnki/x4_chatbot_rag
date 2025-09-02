@@ -48,3 +48,10 @@ Next we need to break each of our wiki page entries into smaller chunks of strin
 ```sh
 make chunks
 ```
+
+### Vector Data
+TODO
+
+```sh
+make vector-store
+```
