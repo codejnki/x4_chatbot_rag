@@ -45,22 +45,28 @@ def parse_changelog_to_list(table_soup):
             description_cell = cols[1]
             list_items = description_cell.find_all('li')
             
+            texts_to_process = []
             if list_items:
-                for li in list_items:
-                    # Get text and normalize all bullet-like characters to '*' for splitting
-                    full_item_text = li.get_text(strip=True).replace('•', '*')
-                    
-                    # Split into individual changes using the normalized '*'
-                    individual_changes = full_item_text.split('*')
-                    
-                    for change in individual_changes:
-                        clean_change = change.strip()
-                        if clean_change:
-                            markdown_lines.append(f"  * {clean_change}")
+                # If proper <li> tags exist, use their text content.
+                texts_to_process = [li.get_text(strip=True) for li in list_items]
             else:
-                item_text = description_cell.get_text(strip=True)
-                if item_text:
-                    markdown_lines.append(f"  * {item_text}")
+                # Otherwise, use the entire cell's text.
+                cell_text = description_cell.get_text(strip=True)
+                if cell_text:
+                    texts_to_process.append(cell_text)
+
+            # Apply the same splitting logic to all collected text items.
+            for text_item in texts_to_process:
+                # Normalize all bullet-like characters to '*' for splitting
+                normalized_text = text_item.replace('•', '*')
+                
+                # Split into individual changes
+                individual_changes = normalized_text.split('*')
+                
+                for change in individual_changes:
+                    clean_change = change.strip()
+                    if clean_change:
+                        markdown_lines.append(f"  * {clean_change}")
             
     return '\n'.join(markdown_lines)
 
