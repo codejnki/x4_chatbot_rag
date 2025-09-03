@@ -98,7 +98,7 @@ $(VECTOR_STORE_DIR): chunks $(VECTOR_STORE_SCRIPT)
 # Create the chunked JSON file from the corpus.
 chunks: summarize
 	@echo "--> Chunking corpus file..."
-	$(PYTHON) $(CHUNK_SCRIPT)
+	@$(PYTHON) $(CHUNK_SCRIPT)
 
 # Create the summarized markdown files.
 summarize: markdown
@@ -161,14 +161,6 @@ clean-chunks:
 ifeq ($(OS),Windows_NT)
 		-$(RM_RF) $(subst /,\,$(CHUNKS_FILE))
 else
-		-$(RM_RF) $(CHUNKS_FILE)
-endif
-
-clean-chunks:
-	@echo "--> Deleting chunks file..."
-ifeq ($(OS),Windows_NT)
-		-$(RM_RF) $(subst /,\,$(CHUNKS_FILE))
-else	
 		-$(RM_RF) $(CHUNKS_FILE)
 endif
 
