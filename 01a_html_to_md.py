@@ -22,8 +22,8 @@ logger = logging.getLogger(__name__)
 
 # --- Configuration ---
 DATA_SOURCE_DIR = Path("x4-foundations-wiki")
-SANITIZED_DIR = DATA_SOURCE_DIR / "hashed_pages"
-MD_PAGES_DIR = DATA_SOURCE_DIR / "pages_md"
+SANITIZED_DIR = Path(DATA_SOURCE_DIR,  "hashed_pages")
+MD_PAGES_DIR = Path(DATA_SOURCE_DIR, "pages_md")
 
 def process_html_file(input_path: Path, output_path: Path):
     """
@@ -74,11 +74,13 @@ def main():
 
     # input_file_path = SANITIZED_DIR / args.input_file
     # output_file_path = MD_PAGES_DIR / Path(args.input_file).with_suffix(".md")
-
-    input_file_path = Path(os.getcwd(), SANITIZED_DIR, args.input_file.replace("\\\\", "\\"))
-    output_file_path = Path(os.getcwd(),MD_PAGES_DIR, Path(args.input_file).with_suffix(".md"))
+    logger.info(f"input_file: {args.input_file}")
+    logger.info(type(args.input_file))
+    input_file_path = Path(SANITIZED_DIR, args.input_file)
+    output_file_path = Path(MD_PAGES_DIR, Path(args.input_file).with_suffix(".md"))
 
     if not input_file_path.exists():
+        logger.info(type(input_file_path.exists()))
         logger.error(f"Input file not found: {input_file_path}")
         return
 
