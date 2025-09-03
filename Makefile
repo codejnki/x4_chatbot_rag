@@ -106,10 +106,15 @@ $(CHUNKS_FILE): $(SUMMARIZED_PAGES_TIMESTAMP) $(CHUNK_SCRIPT)
 
 # Create the summarized markdown files.
 summarize: markdown
-	@echo "--> Summarizing markdown files..."
-	@$(PYTHON) $(GET_FILES_TO_PROCESS_SCRIPT) $(MD_PAGES_DIR) $(SUMMARIZED_PAGES_DIR) .md .md | \
-	xargs -P 4 -I {} $(PYTHON) $(SUMMARIZE_MD_SCRIPT) {}
-	@touch $(SUMMARIZED_PAGES_TIMESTAMP)
+	@echo "--> Checking for markdown files to summarize..."
+	@PROCESS_LIST=$($(PYTHON) $(GET_FILES_TO_PROCESS_SCRIPT) $(MD_PAGES_DIR) $(SUMMARIZED_PAGES_DIR) .md .md); \
+	if [ -n "$$PROCESS_LIST" ]; then \
+		echo "--> Summarizing markdown files..."; \
+		echo "$$PROCESS_LIST" | xargs -P 4 -I {} $(PYTHON) $(SUMMARIZE_MD_SCRIPT) {}; \
+		touch $(SUMMARIZED_PAGES_TIMESTAMP); \
+	else \
+		echo "--> No markdown files to summarize. Skipping."; \
+	fi
 
 # Create the markdown files from the sanitized html files.
 markdown: data
