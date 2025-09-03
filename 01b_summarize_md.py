@@ -1,16 +1,11 @@
-# 01_generate_corpus.py
+# 01b_summarize_md.py
 
-import os
-import json
-import re
-import tiktoken
+import argparse
 import logging
-from bs4 import BeautifulSoup
-from markdownify import markdownify as md
-from tqdm import tqdm
+import tiktoken
 from openai import OpenAI, APIError
 from pathlib import Path
-from markdown_it import MarkdownIt
+from tqdm import tqdm
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from typing import List
 
@@ -42,10 +37,9 @@ logger = logging.getLogger(__name__)
 # --- End Logging Configuration ---
 
 # --- Configuration ---
-DATA_SOURCE_DIR = Path(r"x4-foundations-wiki")
-SANITIZED_DIR = DATA_SOURCE_DIR / "hashed_pages"
-PATH_MAP_FILE = DATA_SOURCE_DIR / "path_map.json"
-OUTPUT_FILE = "x4_wiki_corpus.json"
+DATA_SOURCE_DIR = Path("x4-foundations-wiki")
+MD_PAGES_DIR = DATA_SOURCE_DIR / "pages_md"
+SUMMARIZED_PAGES_DIR = DATA_SOURCE_DIR / "pages_summarized"
 
 # --- LLM Configuration ---
 LM_STUDIO_BASE_URL = "http://localhost:1234/v1"
@@ -58,7 +52,6 @@ LIST_SUMMARY_THRESHOLD = 10
 CLIENT = OpenAI(base_url=LM_STUDIO_BASE_URL, api_key=API_KEY)
 SUMMARIZER_PROMPT_TEMPLATE = Path(SUMMARIZER_PROMPT_PATH).read_text("utf-8")
 TOKENIZER = tiktoken.get_encoding("cl100k_base")
-MD_PARSER = MarkdownIt()
 PROMPT_TEMPLATE_SIZE = len(TOKENIZER.encode(SUMMARIZER_PROMPT_TEMPLATE.format(task="", content="")))
 EFFECTIVE_CONTEXT_SIZE = MAX_CONTEXT_TOKENS - PROMPT_TEMPLATE_SIZE - 200 # Safety buffer
 
@@ -165,57 +158,29 @@ def summarize_and_enrich_content(md_content: str, file_path_for_logging: Path) -
     
     return "\n\n---\n\n".join(enriched_sections)
 
-def process_html_file(file_path, path_map):
-    try:
-        relative_path = Path(file_path).relative_to(SANITIZED_DIR)
-        path_key = str(relative_path).replace(os.path.sep, '/')
-        original_path = path_map.get(path_key)
-        if not original_path:
-            logger.warning(f"Could not find original path for {file_path}. Skipping.")
-            return None
-        with open(file_path, 'r', encoding='utf-8') as f:
-            html_content = f.read()
-        soup = BeautifulSoup(html_content, 'lxml')
-        main_content = soup.find('main', id="mainContentArea")
-        if not main_content: return None
-        title_tag = main_content.find('h1')
-        title = title_tag.get_text(strip=True) if title_tag else "Untitled"
-        body_container = main_content.find('div', id="xwikicontent")
-        if not body_container: return None
-        for a_tag in body_container.find_all('a'):
-            a_tag.unwrap()
-        body_markdown = md(str(body_container), heading_style="ATX", strip=['img'])
-        full_markdown = f"# {title}\n\n{body_markdown}"
-        cleaned_markdown = re.sub(r'\n{3,}', '\n\n', full_markdown).strip()
-        enriched_content = summarize_and_enrich_content(cleaned_markdown, file_path)
-        return {'source': os.path.dirname(original_path), 'title': title, 'content': enriched_content}
-    except Exception as e:
-        logger.error(f"Error processing file {file_path}: {e}")
-        return None
-
 def main():
-    logger.info("Starting Phase 1: Data Preparation (with sequential summarization)")
-    try:
-        with open(PATH_MAP_FILE, 'r', encoding='utf-8') as f:
-            path_map = json.load(f)
-    except FileNotFoundError:
-        logger.error(f"Path map not found at '{PATH_MAP_FILE}'. Run 'make data' first.")
+    parser = argparse.ArgumentParser(description="Summarize and enrich a single Markdown file.")
+    parser.add_argument("input_file", type=str, help="Path to the input Markdown file relative to the MD pages directory.")
+
+    args = parser.parse_args()
+
+    input_file_path = MD_PAGES_DIR / args.input_file
+    output_file_path = SUMMARIZED_PAGES_DIR / args.input_file
+
+    if not input_file_path.exists():
+        logger.error(f"Input file not found: {input_file_path}")
         return
 
-    target_files = list(SANITIZED_DIR.glob('**/*.html'))
-    logger.info(f"Found {len(target_files)} pages to process.")
+    with open(input_file_path, 'r', encoding='utf-8') as f:
+        md_content = f.read()
 
-    processed_docs = []
-    for file_path in tqdm(target_files, desc="Processing & Summarizing Files"):
-        result = process_html_file(file_path, path_map)
-        if result:
-            processed_docs.append(result)
+    enriched_content = summarize_and_enrich_content(md_content, input_file_path)
 
-    logger.info(f"Successfully processed and enriched {len(processed_docs)} documents.")
-    logger.info(f"Saving the processed data to '{OUTPUT_FILE}'...")
-    with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
-        json.dump(processed_docs, f, indent=2, ensure_ascii=False)
-    logger.info(f"Corpus saved to {OUTPUT_FILE}")
+    output_file_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_file_path, 'w', encoding='utf-8') as f:
+        f.write(enriched_content)
+
+    logger.info(f"Successfully summarized and enriched {input_file_path} to {output_file_path}")
 
 if __name__ == "__main__":
     main()

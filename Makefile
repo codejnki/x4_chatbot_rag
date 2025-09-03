@@ -3,21 +3,28 @@
 # Data files
 ZIP_FILE := x4-foundations-wiki.zip
 WIKI_DIR := x4-foundations-wiki
-PAGES_DIR := $(WIKI_DIR)/pages
-UNZIP_STAMP := $(WIKI_DIR)/.unzipped
+HASH_FILE := $(WIKI_DIR)/file_hashes.json
 
-# Python scripts and generated files
-UNZIP_SCRIPT := 00_unzip_data.py
-CORPUS_SCRIPT := 01_generate_corpus.py
-CORPUS_FILE := x4_wiki_corpus.json
-CHUNK_SCRIPT := 02_chunk_corpus.py
-CHUNKS_FILE := x4_wiki_chunks.json
-VECTOR_STORE_SCRIPT := 03_build_vector_store.py
-VECTOR_STORE_DIR := faiss_index
-KEYWORDS_SCRIPT := 04_generate_keywords.py
-KEYWORDS_FILE := x4_keywords.json
+# --- Directories ---
+SANITIZED_DIR := $(WIKI_DIR)/hashed_pages
+MD_PAGES_DIR := $(WIKI_DIR)/pages_md
+SUMMARIZED_PAGES_DIR := $(WIKI_DIR)/pages_summarized
 KEYWORDS_CACHE_DIR := .keyword_cache
+
+# --- Python Scripts ---
+UNZIP_SCRIPT := 00_unzip_data.py
+HTML_TO_MD_SCRIPT := 01a_html_to_md.py
+SUMMARIZE_MD_SCRIPT := 01b_summarize_md.py
+GET_FILES_TO_PROCESS_SCRIPT := 01c_get_files_to_process.py
+CHUNK_SCRIPT := 02_chunk_corpus.py
+VECTOR_STORE_SCRIPT := 03_build_vector_store.py
+KEYWORDS_SCRIPT := 04_generate_keywords.py
 REFINE_KEYWORDS_SCRIPT := 05_refine_keywords.py
+
+# --- Generated Files ---
+CHUNKS_FILE := x4_wiki_chunks.json
+VECTOR_STORE_DIR := faiss_index
+KEYWORDS_FILE := x4_keywords.json
 REFINED_KEYWORDS_FILE := x4_keywords_refined.json
 
 # Define the virtual environment directory
@@ -44,7 +51,7 @@ VENV_TIMESTAMP := $(VENV_DIR)/.installed
 # --- Main Targets ---
 .DEFAULT_GOAL := run
 
-.PHONY: data clean clean-keywords clean-venv freeze help all run install
+.PHONY: data markdown summarize chunks vector-store keywords keywords-refined clean-all clean-hashed-html clean-md-pages clean-summarized-pages clean-chunks clean-vector-store clean-keywords-cache clean-keywords-files clean-venv freeze help all run install
 
 # Run the entire pipeline and start the server
 run: all
@@ -72,43 +79,42 @@ $(PIP):
 
 # Generate the final, refined keyword list.
 keywords-refined: $(REFINED_KEYWORDS_FILE)
-$(REFINED_KEYWORDS_FILE): $(KEYWORDS_FILE) $(REFINE_KEYWORDS_SCRIPT)
+$(REFINED_KEYWORDS_FILE): keywords $(REFINE_KEYWORDS_SCRIPT)
 	@echo "--> Refining keyword list..."
 	$(PYTHON) $(REFINE_KEYWORDS_SCRIPT)
 
 # Generate the raw keyword list from the chunks using an LLM.
 keywords: $(KEYWORDS_FILE)
-$(KEYWORDS_FILE): $(CHUNKS_FILE) $(KEYWORDS_SCRIPT)
+$(KEYWORDS_FILE): chunks $(KEYWORDS_SCRIPT)
 	@echo "--> Generating keywords from chunks (this may take a long time)..."
 	$(PYTHON) $(KEYWORDS_SCRIPT)
 
 # Build the FAISS vector store from the chunks.
 vector-store: $(VECTOR_STORE_DIR)
-$(VECTOR_STORE_DIR): $(CHUNKS_FILE) $(VECTOR_STORE_SCRIPT)
+$(VECTOR_STORE_DIR): chunks $(VECTOR_STORE_SCRIPT)
 	@echo "--> Building vector store from chunks..."
 	$(PYTHON) $(VECTOR_STORE_SCRIPT)
 
 # Create the chunked JSON file from the corpus.
-chunks: $(CHUNKS_FILE)
-$(CHUNKS_FILE): $(CORPUS_FILE) $(CHUNK_SCRIPT)
+chunks: summarize
 	@echo "--> Chunking corpus file..."
 	$(PYTHON) $(CHUNK_SCRIPT)
 
-# Create the JSON corpus from the HTML files.
-corpus: $(CORPUS_FILE)
-$(CORPUS_FILE): $(UNZIP_STAMP) $(CORPUS_SCRIPT)
-	@echo "--> Generating wiki corpus from HTML files..."
-	$(PYTHON) $(CORPUS_SCRIPT)
+# Create the summarized markdown files.
+summarize: markdown
+	@echo "--> Summarizing markdown files..."
+	@$(PYTHON) $(GET_FILES_TO_PROCESS_SCRIPT) $(MD_PAGES_DIR) $(SUMMARIZED_PAGES_DIR) .md .md | xargs -I {} $(PYTHON) $(SUMMARIZE_MD_SCRIPT) {}
 
-# Unzip the wiki data.
-data: $(UNZIP_STAMP)
+# Create the markdown files from the sanitized html files.
+markdown: data
+	@echo "--> Converting HTML to Markdown..."
+	@$(PYTHON) $(GET_FILES_TO_PROCESS_SCRIPT) $(SANITIZED_DIR) $(MD_PAGES_DIR) .html .md | xargs -I {} $(PYTHON) $(HTML_TO_MD_SCRIPT) {}
 
-# --- THIS IS THE FIX ---
-# Use Python to create the stamp file, which is OS-agnostic.
-$(UNZIP_STAMP): $(ZIP_FILE) $(UNZIP_SCRIPT)
+# Unzip the wiki data if the zip file has changed.
+data: $(HASH_FILE)
+$(HASH_FILE): $(ZIP_FILE) $(UNZIP_SCRIPT)
 	@echo "--> Unzipping and sanitizing wiki data..."
 	$(PYTHON) $(UNZIP_SCRIPT)
-	$(PYTHON) -c "import pathlib; pathlib.Path('$(UNZIP_STAMP)').touch()"
 
 # --- Utility Targets ---
 
@@ -118,21 +124,37 @@ freeze: $(PIP)
 	$(PIP) freeze > requirements.txt
 
 # Clean up the project
-clean:
-	@echo "--> Cleaning up project files (venv and keyword cache are preserved)..."
-	-$(RM_RF) $(WIKI_DIR)
-	-rm -f $(CORPUS_FILE) $(CHUNKS_FILE) $(KEYWORDS_FILE) $(REFINED_KEYWORDS_FILE)
-	-$(RM_RF) $(VECTOR_STORE_DIR)
-	-rm -f $(UNZIP_STAMP)
-	find . -type f -name "*.pyc" -delete
-	find . -type d -name "__pycache__" -delete
-	@echo "--> Cleanup complete."
+clean-all: clean-hashed-html clean-md-pages clean-summarized-pages clean-chunks clean-vector-store clean-keywords-cache clean-keywords-files
+	@echo "--> Full cleanup complete."
 
-# Clean the keyword cache specifically
-clean-keywords:
+clean-hashed-html:
+	@echo "--> Deleting hashed html pages..."
+	-$(RM_RF) $(SANITIZED_DIR)
+	-rm -f $(HASH_FILE)
+
+clean-md-pages:
+	@echo "--> Deleting markdown pages..."
+	-$(RM_RF) $(MD_PAGES_DIR)
+
+clean-summarized-pages:
+	@echo "--> Deleting summarized pages..."
+	-$(RM_RF) $(SUMMARIZED_PAGES_DIR)
+
+clean-chunks:
+	@echo "--> Deleting chunks file..."
+	-rm -f $(CHUNKS_FILE)
+
+clean-vector-store:
+	@echo "--> Deleting vector store..."
+	-$(RM_RF) $(VECTOR_STORE_DIR)
+
+clean-keywords-cache:
 	@echo "--> Deleting keyword cache..."
 	-$(RM_RF) $(KEYWORDS_CACHE_DIR)
-	@echo "--> Keyword cache deleted."
+
+clean-keywords-files:
+	@echo "--> Deleting keyword files..."
+	-rm -f $(KEYWORDS_FILE) $(REFINED_KEYWORDS_FILE)
 
 # Deletes the virtual environment
 clean-venv:
@@ -143,17 +165,24 @@ clean-venv:
 # Help
 help:
 	@echo "Available targets:"
-	@echo "  run               - (Default) Builds all data and starts the server."
-	@echo "  all               - Ensures dependencies are installed and builds all data artifacts."
-	@echo "  install           - Ensures venv exists and all dependencies are installed."
-	@echo "  keywords-refined  - Creates the final, cleaned list of keywords."
-	@echo "  keywords          - Generates a raw list of keywords using an LLM."
-	@echo "  vector-store      - Builds the FAISS vector store for the RAG model."
-	@echo "  chunks            - Generates the chunked JSON file for embedding."
-	@echo "  corpus            - Generates the JSON corpus from the wiki data."
-	@echo "  data              - Unzips the wiki data from $(ZIP_FILE)."
-	@echo "  freeze            - Updates requirements.txt from the current environment."
-	@echo "  clean             - Removes data and generated files (preserves venv and keyword cache)."
-	@echo "  clean-keywords    - Deletes the keyword generation cache for a full rebuild."
-	@echo "  clean-venv        - Deletes the Python virtual environment."
-	@echo "  help              - Shows this help message."
+	@echo "  run                   - (Default) Builds all data and starts the server."
+	@echo "  all                   - Ensures dependencies are installed and builds all data artifacts."
+	@echo "  install               - Ensures venv exists and all dependencies are installed."
+	@echo "  data                  - Unzips the wiki data from $(ZIP_FILE)."
+	@echo "  markdown              - Generates markdown files from html."
+	@echo "  summarize             - Generates summarized markdown files."
+	@echo "  chunks                - Generates the chunked JSON file for embedding."
+	@echo "  vector-store          - Builds the FAISS vector store for the RAG model."
+	@echo "  keywords              - Generates a raw list of keywords using an LLM."
+	@echo "  keywords-refined      - Creates the final, cleaned list of keywords."
+	@echo "  freeze                - Updates requirements.txt from the current environment."
+	@echo "  clean-all             - Removes all generated data and caches."
+	@echo "  clean-hashed-html     - Deletes the hashed html pages."
+	@echo "  clean-md-pages        - Deletes the markdown pages."
+	@echo "  clean-summarized-pages- Deletes the summarized pages."
+	@echo "  clean-chunks          - Deletes the chunks file."
+	@echo "  clean-vector-store    - Deletes the vector store."
+	@echo "  clean-keywords-cache  - Deletes the keyword generation cache."
+	@echo "  clean-keywords-files  - Deletes the keyword files."
+	@echo "  clean-venv            - Deletes the Python virtual environment."
+	@echo "  help                  - Shows this help message."
