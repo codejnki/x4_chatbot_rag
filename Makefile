@@ -28,6 +28,7 @@ KEYWORDS_FILE := x4_keywords.json
 REFINED_KEYWORDS_FILE := x4_keywords_refined.json
 VECTOR_STORE_TIMESTAMP := $(VECTOR_STORE_DIR)/.processed
 SUMMARIZED_PAGES_TIMESTAMP := $(SUMMARIZED_PAGES_DIR)/.processed
+KEYWORDS_TIMESTAMP := $(KEYWORDS_CACHE_DIR)/.processed
 
 # Define the virtual environment directory
 VENV_DIR := .venv
@@ -80,17 +81,20 @@ $(PIP):
 
 # --- Data Pipeline ---
 
+# Generate the raw keyword list from the chunks using an LLM.
+keywords: $(KEYWORDS_TIMESTAMP)
+
+$(KEYWORDS_TIMESTAMP): $(VECTOR_STORE_TIMESTAMP) $(KEYWORDS_SCRIPT)
+	@echo "--> Generating keywords from chunks (this may take a long time)..."
+	@$(PYTHON) $(KEYWORDS_SCRIPT)
+	@touch $(KEYWORDS_TIMESTAMP)
+
 # Generate the final, refined keyword list.
 keywords-refined: $(REFINED_KEYWORDS_FILE)
-$(REFINED_KEYWORDS_FILE): keywords $(REFINE_KEYWORDS_SCRIPT)
-	@echo "--> Refining keyword list..."
-	$(PYTHON) $(REFINE_KEYWORDS_SCRIPT)
 
-# Generate the raw keyword list from the chunks using an LLM.
-keywords: $(KEYWORDS_FILE)
-$(KEYWORDS_FILE): vector-store $(KEYWORDS_SCRIPT)
-	@echo "--> Generating keywords from chunks (this may take a long time)..."
-	$(PYTHON) $(KEYWORDS_SCRIPT)
+$(REFINED_KEYWORDS_FILE): $(KEYWORDS_TIMESTAMP) $(REFINE_KEYWORDS_SCRIPT)
+	@echo "--> Refining keyword list..."
+	@$(PYTHON) $(REFINE_KEYWORDS_SCRIPT)
 
 # Build the FAISS vector store from the chunks.
 vector-store: $(VECTOR_STORE_TIMESTAMP)
