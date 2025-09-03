@@ -3,7 +3,6 @@
 import argparse
 import re
 import logging
-import os
 from bs4 import BeautifulSoup
 from markdownify import markdownify as md
 from pathlib import Path
