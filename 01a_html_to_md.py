@@ -31,8 +31,6 @@ def process_html_file(input_path: Path, output_path: Path):
     it to Markdown, and saves it to a new file.
     """
     try:
-        logger.info(f"imput_path: {input_path}")
-        logger.info(f"output_path: {output_path}")
         with input_path.open('r', encoding='utf-8') as f:
             html_content = f.read()
 
@@ -71,13 +69,10 @@ def main():
     parser.add_argument("input_file", type=str, help="Path to the input HTML file relative to the sanitized pages directory.")
     
     args = parser.parse_args()
+    clean_input_file = args.input_file.strip()
 
-    # input_file_path = SANITIZED_DIR / args.input_file
-    # output_file_path = MD_PAGES_DIR / Path(args.input_file).with_suffix(".md")
-    logger.info(f"input_file: {args.input_file}")
-    logger.info(type(args.input_file))
-    input_file_path = Path(SANITIZED_DIR, args.input_file)
-    output_file_path = Path(MD_PAGES_DIR, Path(args.input_file).with_suffix(".md"))
+    input_file_path = Path(SANITIZED_DIR, clean_input_file)
+    output_file_path = Path(MD_PAGES_DIR, Path(clean_input_file).with_suffix(".md"))
 
     if not input_file_path.exists():
         logger.info(type(input_file_path.exists()))

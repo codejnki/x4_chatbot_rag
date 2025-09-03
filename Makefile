@@ -103,12 +103,14 @@ chunks: summarize
 # Create the summarized markdown files.
 summarize: markdown
 	@echo "--> Summarizing markdown files..."
-	@$(PYTHON) $(GET_FILES_TO_PROCESS_SCRIPT) $(MD_PAGES_DIR) $(SUMMARIZED_PAGES_DIR) .md .md | xargs -I {} $(PYTHON) $(SUMMARIZE_MD_SCRIPT) {}
+	@$(PYTHON) $(GET_FILES_TO_PROCESS_SCRIPT) $(MD_PAGES_DIR) $(SUMMARIZED_PAGES_DIR) .md .md | \
+	xargs -P 8 -I {} $(PYTHON) $(SUMMARIZE_MD_SCRIPT) {}
 
 # Create the markdown files from the sanitized html files.
 markdown: data
 	@echo "--> Converting HTML to Markdown..."
-	@$(PYTHON) $(GET_FILES_TO_PROCESS_SCRIPT) $(SANITIZED_DIR) $(MD_PAGES_DIR) .html .md | xargs -I {} $(PYTHON) $(HTML_TO_MD_SCRIPT) {}
+	@$(PYTHON) $(GET_FILES_TO_PROCESS_SCRIPT) $(SANITIZED_DIR) $(MD_PAGES_DIR) .html .md | \
+	xargs -P 8 -I {} $(PYTHON) $(HTML_TO_MD_SCRIPT) {}
 
 # Unzip the wiki data if the zip file has changed.
 data: $(HASH_FILE)
