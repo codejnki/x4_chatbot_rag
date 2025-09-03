@@ -1,0 +1,9 @@
+MAX_CONTEXT_TOKENS = 6000
+VECTOR_STORE_PATH = "faiss_index"
+MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+SYSTEM_PROMPT_PATH = "prompts/system_prompt.txt"
+KEYWORDS_PATH = "x4_keywords_refined.json"
+RESEARCHER_PROMPT_PATH = "prompts/researcher_prompt.txt"
+BASE_URL = "http://localhost:1234/v1"
+API_KEY = "not-needed"
+RERANKER_MODEL = "BAAI/bge-reranker-base"

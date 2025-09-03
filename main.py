@@ -1,77 +1,14 @@
-# main.py (Corrected)
+# main.py
 
 import uvicorn
-import json
-import time
-import uuid
-import logging
-from fastapi import FastAPI, Response
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List, Optional, Literal
-
-from rag_chain import X4RAGChain
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from logging_config import setup_logging
+from api_routes import router as api_router
 
 # --- Logging Configuration ---
-# Sets up logging to file and a tqdm-friendly console handler
-class TqdmLoggingHandler(logging.Handler):
-    def __init__(self, level=logging.NOTSET):
-        super().__init__(level)
-
-    def emit(self, record):
-        try:
-            msg = self.format(record)
-            from tqdm import tqdm
-            tqdm.write(msg)
-            self.flush()
-        except (KeyboardInterrupt, SystemExit):
-            raise
-        except Exception:
-            self.handleError(record)
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-    handlers=[
-        logging.FileHandler("console.log"),
-        TqdmLoggingHandler()
-    ]
-)
+setup_logging()
 # --- End Logging Configuration ---
-
-# ... (Pydantic models are unchanged) ...
-class ChatMessage(BaseModel):
-    role: Literal["system", "user", "assistant"]
-    content: str
-
-class ChatCompletionRequest(BaseModel):
-    model: str
-    messages: List[ChatMessage]
-    temperature: Optional[float] = 0.7
-    stream: Optional[bool] = False
-
-class ResponseMessage(BaseModel):
-    role: Literal["assistant"]
-    content: str
-
-class ChatCompletionResponseChoice(BaseModel):
-    index: int
-    message: ResponseMessage
-    finish_reason: str
-
-class UsageInfo(BaseModel):
-    prompt_tokens: int = 0
-    completion_tokens: int = 0
-    total_tokens: int = 0
-
-class ChatCompletionResponse(BaseModel):
-    id: str
-    object: str = "chat.completion"
-    created: int
-    model: str
-    choices: List[ChatCompletionResponseChoice]
-    usage: UsageInfo
 
 # --- FastAPI Application ---
 app = FastAPI(
@@ -88,45 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-rag_pipeline = X4RAGChain()
-
-@app.post("/v1/chat/completions")
-async def chat_completions(request: ChatCompletionRequest):
-    if not request.messages:
-        return Response(status_code=400, content="Messages list is empty.")
-
-    user_query = request.messages[-1].content
-    chat_history = []
-    for msg in request.messages[:-1]:
-        if msg.role == "user": chat_history.append(HumanMessage(content=msg.content))
-        elif msg.role == "assistant": chat_history.append(AIMessage(content=msg.content))
-        elif msg.role == "system": chat_history.append(SystemMessage(content=msg.content))
-
-    if request.stream:
-        async def event_stream():
-            stream_id = f"chatcmpl-{uuid.uuid4()}"
-            # --- THIS IS THE FIX: add 'await' ---
-            async for chunk in await rag_pipeline.stream_query(user_query, chat_history):
-                if answer_chunk := chunk.get("answer"):
-                    response_chunk = {
-                        "id": stream_id, "object": "chat.completion.chunk", "created": int(time.time()),
-                        "model": request.model, "choices": [{"index": 0, "delta": {"content": answer_chunk}, "finish_reason": None}]
-                    }
-                    yield f"data: {json.dumps(response_chunk)}\n\n"
-            final_chunk = {"id": stream_id, "object": "chat.completion.chunk", "created": int(time.time()), "model": request.model, "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}]}
-            yield f"data: {json.dumps(final_chunk)}\n\n"
-            yield "data: [DONE]\n\n"
-
-        from fastapi.responses import StreamingResponse
-        return StreamingResponse(event_stream(), media_type="text/event-stream")
-    else:
-        full_response_content = ""
-        # --- THIS IS THE FIX: add 'await' ---
-        async for chunk in await rag_pipeline.stream_query(user_query, chat_history):
-            if answer_chunk := chunk.get("answer"):
-                full_response_content += answer_chunk
-        response = ChatCompletionResponse(id=f"chatcmpl-{uuid.uuid4()}", created=int(time.time()), model=request.model, choices=[ChatCompletionResponseChoice(index=0, message=ResponseMessage(role="assistant", content=full_response_content), finish_reason="stop")], usage=UsageInfo())
-        return response
+app.include_router(api_router)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8001)
