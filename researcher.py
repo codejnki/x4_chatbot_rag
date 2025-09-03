@@ -30,11 +30,14 @@ class Researcher:
                 logger.error(f"API Error during summarization: {e}")
                 return "NO_CLEAR_ANSWER"
         else:
-            logger.info(f"Content for recursive summarization is too large. Splitting {len(texts)} texts in half.")
-            mid_point = len(texts) // 2
-            first_half_summary = await self._recursive_summarize(question, texts[:mid_point])
-            second_half_summary = await self._recursive_summarize(question, texts[mid_point:])
-
+            logger.info(f"Content for recursive summarization is too large. Splitting text in half.")
+            mid_point = len(combined_text) // 2
+            first_half = combined_text[:mid_point]
+            second_half = combined_text[mid_point:]
+            
+            first_half_summary = await self._recursive_summarize(question, [first_half])
+            second_half_summary = await self._recursive_summarize(question, [second_half])
+            
             return await self._recursive_summarize(question, [first_half_summary, second_half_summary])
 
     async def run(self, question: str, documents: List[Document]) -> Optional[str]:

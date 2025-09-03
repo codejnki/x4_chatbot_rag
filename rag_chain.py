@@ -72,4 +72,5 @@ class X4RAGChain:
             yield {"answer": chunk}
 
     async def stream_query(self, question: str, chat_history: List[BaseMessage]) -> AsyncGenerator[Dict, None]:
-        return self._get_context_stream(question, chat_history)
+        async for chunk in self._get_context_stream(question, chat_history):
+            yield chunk
