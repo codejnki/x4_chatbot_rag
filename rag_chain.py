@@ -41,8 +41,8 @@ class X4RAGChain:
         return json.loads(path.read_text("utf-8"))
 
     def __init__(self, vector_store_path="faiss_index", model_name="sentence-transformers/all-MiniLM-L6-v2",
-                 prompt_path="system_prompt.txt", entities_path="x4_keywords_refined.json",
-                 researcher_prompt_path="researcher_prompt.txt"):
+                 prompt_path="prompts/system_prompt.txt", entities_path="x4_keywords_refined.json",
+                 researcher_prompt_path="prompts/researcher_prompt.txt"):
 
         self.base_system_prompt = self._load_text_file(prompt_path, "System prompt")
         researcher_template_str = self._load_text_file(researcher_prompt_path, "Researcher prompt")

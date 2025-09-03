@@ -14,13 +14,28 @@ from rag_chain import X4RAGChain
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 # --- Logging Configuration ---
-# Sets up logging to file and console
+# Sets up logging to file and a tqdm-friendly console handler
+class TqdmLoggingHandler(logging.Handler):
+    def __init__(self, level=logging.NOTSET):
+        super().__init__(level)
+
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            from tqdm import tqdm
+            tqdm.write(msg)
+            self.flush()
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except Exception:
+            self.handleError(record)
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
     handlers=[
         logging.FileHandler("console.log"),
-        logging.StreamHandler()
+        TqdmLoggingHandler()
     ]
 )
 # --- End Logging Configuration ---
