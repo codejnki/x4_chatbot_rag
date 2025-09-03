@@ -3,7 +3,10 @@
 import json
 import logging
 import re
+import time
+import concurrent.futures
 from pathlib import Path
+from openai import OpenAI
 from tqdm import tqdm
 
 # --- Logging Configuration ---
@@ -29,122 +32,130 @@ logging.basicConfig(
         TqdmLoggingHandler()
     ]
 )
-
 logger = logging.getLogger(__name__)
 # --- End Logging Configuration ---
 
 # --- Configuration ---
 INPUT_DIR = Path("x4-foundations-wiki/pages_md")
 OUTPUT_FILE = "x4_changelog_chunks.json"
+PROMPT_PATH = "prompts/changelog_analyzer_prompt.txt"
 CHANGELOG_KEYWORDS = ["changelog", "patch history"]
 
+LM_STUDIO_BASE_URL = "http://localhost:1234/v1"
+API_KEY = "not-needed"
+MODEL_NAME = "local-model"
+
+MAX_WORKERS = 4
+MAX_RETRIES = 3
+RETRY_DELAY_SECONDS = 5
+
+# --- Globals ---
+CLIENT = OpenAI(base_url=LM_STUDIO_BASE_URL, api_key=API_KEY)
+with open(PROMPT_PATH, "r", encoding="utf-8") as f:
+    PROMPT_TEMPLATE = f.read()
+
 def is_changelog_file(file_path: Path) -> bool:
-    """
-    Determines if a file is a changelog file based on its filename and content.
-    """
-    # Check filename first for a quick match
     for keyword in CHANGELOG_KEYWORDS:
         if keyword in file_path.name.lower():
             return True
-            
-    # If not in filename, check content
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read().lower()
-            if any(keyword in content for keyword in CHANGELOG_KEYWORDS):
+            if any(keyword in f.read(200).lower() for keyword in CHANGELOG_KEYWORDS):
                 return True
-    except Exception as e:
-        logger.error(f"Error reading file {file_path}: {e}")
-        
+    except Exception:
+        pass
     return False
 
-def parse_changelog_file(file_path: Path) -> list:
-    """
-    Parses a cleaned changelog markdown file and creates a list of
-    structured chunk dictionaries.
-    """
-    chunks = []
+def parse_raw_entries(file_path: Path) -> list:
+    entries = []
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             lines = f.readlines()
 
-        current_version_info = ""
-        source_file = str(file_path.relative_to(INPUT_DIR)).replace("\\", "/")
+        current_version = ""
         title = ""
-
         for line in lines:
-            line = line.strip()
-            if not line:
+            stripped_line = line.strip()
+            if not stripped_line:
                 continue
-
-            # Check for the main title of the page
-            if line.startswith('# '):
-                title = line.lstrip('# ').strip()
-                continue
-
-            # Top-level list items are versions/dates
-            if line.startswith('* '):
-                current_version_info = line.lstrip('* ').strip()
-            # Nested list items are the specific changes
-            elif line.startswith('  * '):
-                description = line.lstrip('  * ').strip()
-                
-                # Categorize the change
-                category = "General"
-                if "new feature:" in description.lower():
-                    category = "New Feature"
-                elif description.lower().startswith("added"):
-                    category = "Added"
-                elif description.lower().startswith("improved"):
-                    category = "Improved"
-                elif description.lower().startswith("changed"):
-                     category = "Changed"
-                elif description.lower().startswith("removed"):
-                    category = "Removed"
-                elif description.lower().startswith("fixed"):
-                    category = "Fixed"
-
-                # Create the final chunk
-                chunks.append({
-                    "source": source_file,
+            if stripped_line.startswith('# '):
+                title = stripped_line.lstrip('# ').strip()
+            elif stripped_line.startswith('* '):
+                current_version = stripped_line.lstrip('* ').strip()
+            elif stripped_line.startswith('  * ') and current_version:
+                entry_text = stripped_line.lstrip('  * ').strip()
+                entries.append({
+                    "source": str(file_path.relative_to(INPUT_DIR)).replace("\\", "/"),
                     "title": title,
-                    "version_info": current_version_info,
-                    "category": category,
-                    "content": description,
-                    "chunk_index": len(chunks) + 1
+                    "version_info": current_version,
+                    "original_entry": entry_text
                 })
-
     except Exception as e:
-        logger.error(f"Error parsing file {file_path}: {e}")
-        
-    return chunks
+        logger.error(f"Error parsing raw entries from {file_path}: {e}")
+    return entries
+
+def process_entry_with_llm(entry_data):
+    formatted_prompt = PROMPT_TEMPLATE.format(
+        version_info=entry_data["version_info"],
+        entry=entry_data["original_entry"]
+    )
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = CLIENT.chat.completions.create(
+                model=MODEL_NAME,
+                messages=[{"role": "user", "content": formatted_prompt}],
+                temperature=0.1,
+                response_format={"type": "json_object"},
+            )
+            llm_output = response.choices[0].message.content
+            parsed_json = json.loads(llm_output)
+
+            return {
+                "source": entry_data["source"],
+                "title": entry_data["title"],
+                "version_info": entry_data["version_info"],
+                "category": parsed_json.get("category", "General"),
+                "content": parsed_json.get("summary", entry_data["original_entry"]),
+                "chunk_index": 0 # Placeholder
+            }
+        except Exception as e:
+            logger.warning(f"Attempt {attempt + 1} failed for '{entry_data['original_entry'][:50]}...': {e}")
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_DELAY_SECONDS)
+            else:
+                logger.error(f"Final failure processing entry after {MAX_RETRIES} attempts.")
+                return None
 
 def main():
-    """
-    Identifies changelog files, parses them, and saves the structured data.
-    """
-    logger.info("--- Starting Dedicated Changelog Processing ---")
+    logger.info("--- Starting LLM-Powered Changelog Processing ---")
 
     if not INPUT_DIR.exists():
         logger.error(f"Input directory not found at '{INPUT_DIR}'.")
         return
 
-    # Identify potential changelog files
-    changelog_files = [
-        f for f in tqdm(list(INPUT_DIR.rglob("*.md")), desc="Identifying changelog files") 
-        if is_changelog_file(f)
-    ]
+    changelog_files = [f for f in INPUT_DIR.rglob("*.md") if is_changelog_file(f)]
     logger.info(f"Found {len(changelog_files)} potential changelog files.")
 
-    all_chunks = []
-    for file_path in tqdm(changelog_files, desc="Parsing changelog files"):
-        all_chunks.extend(parse_changelog_file(file_path))
+    raw_entries = []
+    for file_path in tqdm(changelog_files, desc="Parsing raw entries"):
+        raw_entries.extend(parse_raw_entries(file_path))
+    logger.info(f"Found {len(raw_entries)} raw changelog entries to process.")
 
-    logger.info(f"Extracted a total of {len(all_chunks)} changelog entry chunks.")
+    processed_chunks = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        futures = [executor.submit(process_entry_with_llm, entry) for entry in raw_entries]
+        for future in tqdm(concurrent.futures.as_completed(futures), total=len(raw_entries), desc="Processing entries with LLM"):
+            result = future.result()
+            if result:
+                processed_chunks.append(result)
+    
+    # Assign final chunk indices
+    for i, chunk in enumerate(processed_chunks):
+        chunk["chunk_index"] = i + 1
 
+    logger.info(f"Successfully processed {len(processed_chunks)} changelog entries.")
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
-        json.dump(all_chunks, f, indent=2, ensure_ascii=False)
-
+        json.dump(processed_chunks, f, indent=2, ensure_ascii=False)
     logger.info(f"Saved structured changelog chunks to '{OUTPUT_FILE}'.")
     logger.info("--- Changelog Processing Complete ---")
 
