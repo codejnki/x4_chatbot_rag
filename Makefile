@@ -9,7 +9,6 @@ HASH_FILE := $(WIKI_DIR)/file_hashes.json
 SANITIZED_DIR := $(WIKI_DIR)/hashed_pages
 MD_PAGES_DIR := $(WIKI_DIR)/pages_md
 SUMMARIZED_PAGES_DIR := $(WIKI_DIR)/pages_summarized
-SUMMARIZED_PAGES_TIMESTAMP := $(SUMMARIZED_PAGES_DIR)/.processed
 KEYWORDS_CACHE_DIR := .keyword_cache
 
 # --- Python Scripts ---
@@ -27,6 +26,8 @@ CHUNKS_FILE := x4_wiki_chunks.json
 VECTOR_STORE_DIR := faiss_index
 KEYWORDS_FILE := x4_keywords.json
 REFINED_KEYWORDS_FILE := x4_keywords_refined.json
+VECTOR_STORE_TIMESTAMP := $(VECTOR_STORE_DIR)/.processed
+SUMMARIZED_PAGES_TIMESTAMP := $(SUMMARIZED_PAGES_DIR)/.processed
 
 # Define the virtual environment directory
 VENV_DIR := .venv
@@ -87,15 +88,17 @@ $(REFINED_KEYWORDS_FILE): keywords $(REFINE_KEYWORDS_SCRIPT)
 
 # Generate the raw keyword list from the chunks using an LLM.
 keywords: $(KEYWORDS_FILE)
-$(KEYWORDS_FILE): chunks $(KEYWORDS_SCRIPT)
+$(KEYWORDS_FILE): vector-store $(KEYWORDS_SCRIPT)
 	@echo "--> Generating keywords from chunks (this may take a long time)..."
 	$(PYTHON) $(KEYWORDS_SCRIPT)
 
 # Build the FAISS vector store from the chunks.
-vector-store: $(VECTOR_STORE_DIR)
-$(VECTOR_STORE_DIR): $(CHUNKS_FILE) $(VECTOR_STORE_SCRIPT)
+vector-store: $(VECTOR_STORE_TIMESTAMP)
+
+$(VECTOR_STORE_TIMESTAMP): $(CHUNKS_FILE) $(VECTOR_STORE_SCRIPT)
 	@echo "--> Building vector store from chunks..."
-	$(PYTHON) $(VECTOR_STORE_SCRIPT)
+	@$(PYTHON) $(VECTOR_STORE_SCRIPT)
+	@touch $(VECTOR_STORE_TIMESTAMP)
 
 # Create the chunked JSON file from the corpus.
 chunks: $(CHUNKS_FILE)
