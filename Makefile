@@ -34,7 +34,7 @@ VENV_DIR := .venv
 ifeq ($(OS),Windows_NT)
     PY := python
     VENV_PATH_DIR := Scripts
-    RM_RF = cmd /c rmdir /s /q
+    RM_RF = cmd /c rd /s /q
     EXE := .exe
 else
     PY := python3
@@ -104,7 +104,7 @@ chunks: summarize
 summarize: markdown
 	@echo "--> Summarizing markdown files..."
 	@$(PYTHON) $(GET_FILES_TO_PROCESS_SCRIPT) $(MD_PAGES_DIR) $(SUMMARIZED_PAGES_DIR) .md .md | \
-	xargs -P 8 -I {} $(PYTHON) $(SUMMARIZE_MD_SCRIPT) {}
+	xargs -P 4 -I {} $(PYTHON) $(SUMMARIZE_MD_SCRIPT) {}
 
 # Create the markdown files from the sanitized html files.
 markdown: data
@@ -131,32 +131,70 @@ clean-all: clean-hashed-html clean-md-pages clean-summarized-pages clean-chunks 
 
 clean-hashed-html:
 	@echo "--> Deleting hashed html pages..."
-	-$(RM_RF) $(SANITIZED_DIR)
-	-rm -f $(HASH_FILE)
+ifeq ($(OS),Windows_NT)
+		-$(RM_RF) $(subst /,\,$(SANITIZED_DIR))
+		-$(RM_RF) $(subst /,\,$(HASH_FILE))	
+else
+		-$(RM_RF) $(SANITIZED_DIR)
+		-$(RM_RF) $(HASH_FILE)
+endif
 
 clean-md-pages:
 	@echo "--> Deleting markdown pages..."
-	-$(RM_RF) $(MD_PAGES_DIR)
+ifeq ($(OS),Windows_NT)
+		-$(RM_RF) $(subst /,\,$(MD_PAGES_DIR))
+else	
+		-$(RM_RF) $(MD_PAGES_DIR)
+endif	
+
 
 clean-summarized-pages:
 	@echo "--> Deleting summarized pages..."
-	-$(RM_RF) $(SUMMARIZED_PAGES_DIR)
+ifeq ($(OS),Windows_NT)
+		-$(RM_RF) $(subst /,\,$(SUMMARIZED_PAGES_DIR))
+else
+		-$(RM_RF) $(SUMMARIZED_PAGES_DIR)
+endif
 
 clean-chunks:
 	@echo "--> Deleting chunks file..."
-	-rm -f $(CHUNKS_FILE)
+ifeq ($(OS),Windows_NT)
+		-$(RM_RF) $(subst /,\,$(CHUNKS_FILE))
+else
+		-$(RM_RF) $(CHUNKS_FILE)
+endif
+
+clean-chunks:
+	@echo "--> Deleting chunks file..."
+ifeq ($(OS),Windows_NT)
+		-$(RM_RF) $(subst /,\,$(CHUNKS_FILE))
+else	
+		-$(RM_RF) $(CHUNKS_FILE)
+endif
 
 clean-vector-store:
 	@echo "--> Deleting vector store..."
-	-$(RM_RF) $(VECTOR_STORE_DIR)
+ifeq ($(OS),Windows_NT)
+		-$(RM_RF) $(subst /,\,$(VECTOR_STORE_DIR))
+else
+		-$(RM_RF) $(VECTOR_STORE_DIR)
+endif
 
 clean-keywords-cache:
 	@echo "--> Deleting keyword cache..."
-	-$(RM_RF) $(KEYWORDS_CACHE_DIR)
+ifeq ($(OS),Windows_NT)
+		-$(RM_RF) $(subst /,\,$(KEYWORDS_CACHE_DIR))
+else
+		-$(RM_RF) $(KEYWORDS_CACHE_DIR)
+endif
 
 clean-keywords-files:
 	@echo "--> Deleting keyword files..."
-	-rm -f $(KEYWORDS_FILE) $(REFINED_KEYWORDS_FILE)
+ifeq ($(OS),Windows_NT)
+	-$(RM_RF) $(KEYWORDS_FILE) $(REFINED_KEYWORDS_FILE)
+else
+	-$(RM_RF) $(KEYWORDS_FILE) $(REFINED_KEYWORDS_FILE)
+endif
 
 # Deletes the virtual environment
 clean-venv:
