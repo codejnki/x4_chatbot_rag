@@ -9,6 +9,7 @@ HASH_FILE := $(WIKI_DIR)/file_hashes.json
 SANITIZED_DIR := $(WIKI_DIR)/hashed_pages
 MD_PAGES_DIR := $(WIKI_DIR)/pages_md
 SUMMARIZED_PAGES_DIR := $(WIKI_DIR)/pages_summarized
+SUMMARIZED_PAGES_TIMESTAMP := $(SUMMARIZED_PAGES_DIR)/.processed
 KEYWORDS_CACHE_DIR := .keyword_cache
 
 # --- Python Scripts ---
@@ -62,7 +63,8 @@ run: all
 all: $(VENV_TIMESTAMP) vector-store keywords-refined
 
 # A phony target to make 'make install' user-friendly
-install: $(VENV_TIMESTAMP)
+install: 
+	$(VENV_TIMESTAMP)
 
 # Install dependencies only if venv is new or requirements.txt has changed
 $(VENV_TIMESTAMP): $(PIP) requirements.txt
@@ -91,12 +93,14 @@ $(KEYWORDS_FILE): chunks $(KEYWORDS_SCRIPT)
 
 # Build the FAISS vector store from the chunks.
 vector-store: $(VECTOR_STORE_DIR)
-$(VECTOR_STORE_DIR): chunks $(VECTOR_STORE_SCRIPT)
+$(VECTOR_STORE_DIR): $(CHUNKS_FILE) $(VECTOR_STORE_SCRIPT)
 	@echo "--> Building vector store from chunks..."
 	$(PYTHON) $(VECTOR_STORE_SCRIPT)
 
 # Create the chunked JSON file from the corpus.
-chunks: summarize
+chunks: $(CHUNKS_FILE)
+
+$(CHUNKS_FILE): $(SUMMARIZED_PAGES_TIMESTAMP) $(CHUNK_SCRIPT)
 	@echo "--> Chunking corpus file..."
 	@$(PYTHON) $(CHUNK_SCRIPT)
 
@@ -105,6 +109,7 @@ summarize: markdown
 	@echo "--> Summarizing markdown files..."
 	@$(PYTHON) $(GET_FILES_TO_PROCESS_SCRIPT) $(MD_PAGES_DIR) $(SUMMARIZED_PAGES_DIR) .md .md | \
 	xargs -P 4 -I {} $(PYTHON) $(SUMMARIZE_MD_SCRIPT) {}
+	@touch $(SUMMARIZED_PAGES_TIMESTAMP)
 
 # Create the markdown files from the sanitized html files.
 markdown: data
@@ -193,7 +198,6 @@ clean-venv:
 	@echo "--> Deleting virtual environment..."
 	-$(RM_RF) $(VENV_DIR)
 	@echo "--> Virtual environment deleted."
-
 # Help
 help:
 	@echo "Available targets:"
