@@ -3,7 +3,7 @@
 import argparse
 import re
 import logging
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString
 from markdownify import markdownify as md
 from pathlib import Path
 
@@ -24,10 +24,36 @@ DATA_SOURCE_DIR = Path("x4-foundations-wiki")
 SANITIZED_DIR = Path(DATA_SOURCE_DIR,  "hashed_pages")
 MD_PAGES_DIR = Path(DATA_SOURCE_DIR, "pages_md")
 
+def parse_changelog_table(table_soup):
+    """
+    A specialized parser for the changelog HTML table structure.
+    """
+    markdown_lines = ["| Version / Date | Description |", "| --- | --- |"]
+    rows = table_soup.find_all('tr')
+    for row in rows:
+        cols = row.find_all('td')
+        if len(cols) == 2:
+            version_cell = cols[0].get_text(separator=' ', strip=True)
+            description_cell = cols[1]
+            
+            description_lines = []
+            for li in description_cell.find_all('li'):
+                description_lines.append(f"* {li.get_text(strip=True)}")
+            
+            # Handle cases where the description is not a list
+            if not description_lines:
+                description_lines.append(description_cell.get_text(strip=True))
+
+            full_description = '  <br>'.join(description_lines)
+            markdown_lines.append(f"| {version_cell} | {full_description} |")
+            
+    return '\n'.join(markdown_lines)
+
 def process_html_file(input_path: Path, output_path: Path):
     """
     Reads a single HTML file, extracts the title and main content, converts
     it to Markdown, and saves it to a new file.
+    Uses a specialized parser for changelog pages.
     """
     try:
         with input_path.open('r', encoding='utf-8') as f:
@@ -46,11 +72,23 @@ def process_html_file(input_path: Path, output_path: Path):
         if not body_container:
             logger.warning(f"No body container found in {input_path}. Skipping.")
             return
+            
+        # Check if this is a changelog page
+        changelog_table = body_container.find("table")
+        is_changelog = False
+        if changelog_table:
+            header = changelog_table.find('th')
+            if header and "version / date" in header.get_text(strip=True).lower():
+                is_changelog = True
 
-        for a_tag in body_container.find_all('a'):
-            a_tag.unwrap()
+        if is_changelog:
+            body_markdown = parse_changelog_table(changelog_table)
+        else:
+            # Standard processing for non-changelog pages
+            for a_tag in body_container.find_all('a'):
+                a_tag.unwrap()
+            body_markdown = md(str(body_container), heading_style="ATX", strip=['img'])
 
-        body_markdown = md(str(body_container), heading_style="ATX", strip=['img'])
         full_markdown = f"# {title}\n\n{body_markdown}"
         cleaned_markdown = re.sub(r'\n{3,}', '\n\n', full_markdown).strip()
 
@@ -67,14 +105,13 @@ def main():
     parser = argparse.ArgumentParser(description="Convert a single HTML file to Markdown.")
     parser.add_argument("input_file", type=str, help="Path to the input HTML file relative to the sanitized pages directory.")
     
-    args = parser.parse_args()
+    args = parser.parse.args()
     clean_input_file = args.input_file.strip()
 
     input_file_path = Path(SANITIZED_DIR, clean_input_file)
     output_file_path = Path(MD_PAGES_DIR, Path(clean_input_file).with_suffix(".md"))
 
     if not input_file_path.exists():
-        logger.info(type(input_file_path.exists()))
         logger.error(f"Input file not found: {input_file_path}")
         return
 
