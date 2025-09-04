@@ -15,18 +15,29 @@ endif
 ZIP_FILE := x4-foundations-wiki.zip
 
 # Output Directories
-SANITIZED_DIR   := x4-foundations-wiki/hashed_pages
-MD_PAGES_DIR    := x4-foundations-wiki/pages_md
+SANITIZED_DIR           := x4-foundations-wiki/hashed_pages
+MD_PAGES_DIR            := x4-foundations-wiki/pages_md
+SUMMARIZED_PAGES_DIR    := x4-foundations-wiki/pages_summarized
 
 # Timestamp files to track step completion
-UNZIP_TIMESTAMP     := $(SANITIZED_DIR)/.unzipped
-MARKDOWN_TIMESTAMP  := $(MD_PAGES_DIR)/.processed
+UNZIP_TIMESTAMP         := $(SANITIZED_DIR)/.unzipped
+MARKDOWN_TIMESTAMP      := $(MD_PAGES_DIR)/.processed
+SUMMARIES_TIMESTAMP     := $(SUMMARIZED_PAGES_DIR)/.processed
 
 # --- Phony Targets ---
-.PHONY: all data markdown clean-all clean-data clean-markdown
+.PHONY: all data markdown markdown-summaries clean-all clean-data clean-markdown clean-markdown-summaries
 
 # --- Main Targets ---
-all: markdown
+all: markdown-summaries
+
+# 3. Summarize Markdown
+# Enriches markdown files with LLM-generated summaries.
+markdown-summaries: $(SUMMARIES_TIMESTAMP)
+
+$(SUMMARIES_TIMESTAMP): $(MARKDOWN_TIMESTAMP) 01b_summarize_md.py 01c_get_files_to_process.py
+	@echo "--> Summarizing markdown files (in parallel)..."
+	@$(PYTHON) 01c_get_files_to_process.py $(MD_PAGES_DIR) $(SUMMARIZED_PAGES_DIR) .md .md | xargs -P 4 -I {} $(PYTHON) 01b_summarize_md.py {}
+	@touch $(SUMMARIES_TIMESTAMP)
 
 # 2. HTML to Markdown
 # Converts HTML files to markdown in parallel, processing only new or updated files.
@@ -47,7 +58,16 @@ $(UNZIP_TIMESTAMP): $(ZIP_FILE) 00_unzip_data.py
 	@touch $(UNZIP_TIMESTAMP)
 
 # --- Clean Targets ---
-clean-all: clean-data clean-markdown
+clean-all: clean-data clean-markdown clean-markdown-summaries
+
+# Deletes the summarized markdown pages.
+clean-markdown-summaries:
+	@echo "--> Deleting summarized markdown pages..."
+ifeq ($(OS),Windows_NT)
+	-$(RM_RF) $(subst /,\,$(SUMMARIZED_PAGES_DIR))
+else
+	-$(RM_RF) $(SUMMARIZED_PAGES_DIR)
+endif
 
 # Deletes the generated markdown pages.
 clean-markdown:
