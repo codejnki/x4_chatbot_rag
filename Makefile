@@ -5,9 +5,11 @@
 ifeq ($(OS),Windows_NT)
     PYTHON      := python
     RM_RF       = cmd /c rd /s /q
+    DEL_FILE    = cmd /c del /F /Q
 else
     PYTHON      := python3
     RM_RF       = rm -rf
+    DEL_FILE    = rm -f
 endif
 
 # --- File & Directory Definitions ---
@@ -26,7 +28,7 @@ VECTOR_STORE_DIR        := faiss_index
 KEYWORDS_CACHE_DIR      := .keyword_cache
 
 # Data Artifacts
-CHANGELOG_CHUNKS_FILE   := x4_changel_chunks.json
+CHANGELOG_CHUNKS_FILE   := x4_changelog_chunks.json
 WIKI_CHUNKS_FILE        := x4_wiki_chunks.json
 ALL_CHUNKS_FILE         := x4_all_chunks.json
 KEYWORDS_FILE           := x4_keywords.json
@@ -134,21 +136,21 @@ $(UNZIP_TIMESTAMP): $(ZIP_FILE) 00_unzip_data.py
 # --- Utility Targets ---
 help:
 	@echo "Available targets:"
-	@echo "  run                      - (Default) Builds all data and starts the FastAPI server."
-	@echo "  all                      - Builds all data artifacts required by the application."
+	@echo "  run                   - (Default) Builds all data and starts the FastAPI server."
+	@echo "  all                   - Builds all data artifacts required by the application."
 	@echo ""
-	@echo "  clean-all                - Removes all generated data, caches, and artifacts."
-	@echo "  clean-data               - Deletes the unzipped and sanitized HTML data."
-	@echo "  clean-markdown           - Deletes the generated markdown pages."
+	@echo "  clean-all             - Removes all generated data, caches, and artifacts."
+	@echo "  clean-data            - Deletes the unzipped and sanitized HTML data."
+	@echo "  clean-markdown        - Deletes the generated markdown pages."
 	@echo "  clean-markdown-summaries - Deletes the summarized markdown pages."
-	@echo "  clean-changelog-chunks   - Deletes the processed changelog chunks file."
-	@echo "  clean-wiki-chunks        - Deletes the processed wiki chunks file."
-	@echo "  clean-merged-chunks      - Deletes the merged chunks file."
-	@echo "  clean-vector-store       - Deletes the vector store."
-	@echo "  clean-keywords           - Deletes the keyword files and cache."
-	@echo "  clean-keywords-refined   - Deletes the refined keywords file."
+	@echo "  clean-changelog-chunks - Deletes the processed changelog chunks file."
+	@echo "  clean-wiki-chunks     - Deletes the processed wiki chunks file."
+	@echo "  clean-merged-chunks   - Deletes the merged chunks file."
+	@echo "  clean-vector-store    - Deletes the vector store."
+	@echo "  clean-keywords        - Deletes the keyword files and cache."
+	@echo "  clean-keywords-refined - Deletes the refined keywords file."
 	@echo ""
-	@echo "  help                     - Shows this help message."
+	@echo "  help                  - Shows this help message."
 
 # --- Clean Targets ---
 clean-all: clean-data clean-markdown clean-markdown-summaries clean-changelog-chunks clean-wiki-chunks clean-merged-chunks clean-vector-store clean-keywords clean-keywords-refined
@@ -156,82 +158,45 @@ clean-all: clean-data clean-markdown clean-markdown-summaries clean-changelog-ch
 # Deletes the refined keywords file.
 clean-keywords-refined:
 	@echo "--> Deleting refined keywords file..."
-ifeq ($(OS),Windows_NT)
-	-del $(subst /,\,$(REFINED_KEYWORDS_FILE))
-else
-	-$(RM_RF) $(REFINED_KEYWORDS_FILE)
-endif
+	-$(DEL_FILE) $(subst /,\,$(REFINED_KEYWORDS_FILE))
 
 # Deletes the keyword files and cache.
 clean-keywords:
 	@echo "--> Deleting keyword files and cache..."
-ifeq ($(OS),Windows_NT)
 	-$(RM_RF) $(subst /,\,$(KEYWORDS_CACHE_DIR))
-	-del $(subst /,\,$(KEYWORDS_FILE))
-else
-	-$(RM_RF) $(KEYWORDS_CACHE_DIR)
-	-$(RM_RF) $(KEYWORDS_FILE)
-endif
+	-$(DEL_FILE) $(subst /,\,$(KEYWORDS_FILE))
 
 # Deletes the vector store.
 clean-vector-store:
 	@echo "--> Deleting vector store..."
-ifeq ($(OS),Windows_NT)
 	-$(RM_RF) $(subst /,\,$(VECTOR_STORE_DIR))
-else
-	-$(RM_RF) $(VECTOR_STORE_DIR)
-endif
 
 # Deletes the merged chunks file.
 clean-merged-chunks:
 	@echo "--> Deleting merged chunks..."
-ifeq ($(OS),Windows_NT)
-	-del $(subst /,\,$(ALL_CHUNKS_FILE))
-else
-	-$(RM_RF) $(ALL_CHUNKS_FILE)
-endif
+	-$(DEL_FILE) $(subst /,\,$(ALL_CHUNKS_FILE))
 
 # Deletes the generated wiki chunks file.
 clean-wiki-chunks:
 	@echo "--> Deleting wiki chunks..."
-ifeq ($(OS),Windows_NT)
-	-del $(subst /,\,$(WIKI_CHUNKS_FILE))
-else
-	-$(RM_RF) $(WIKI_CHUNKS_FILE)
-endif
+	-$(DEL_FILE) $(subst /,\,$(WIKI_CHUNKS_FILE))
 
 # Deletes the generated changelog chunks file.
 clean-changelog-chunks:
 	@echo "--> Deleting changelog chunks..."
-ifeq ($(OS),Windows_NT)
-	-del $(subst /,\,$(CHANGELOG_CHUNKS_FILE))
-else
-	-$(RM_RF) $(CHANGELOG_CHUNKS_FILE)
-endif
+	-$(DEL_FILE) $(subst /,\,$(CHANGELOG_CHUNKS_FILE))
 
 # Deletes the summarized markdown pages.
 clean-markdown-summaries:
 	@echo "--> Deleting summarized markdown pages..."
-ifeq ($(OS),Windows_NT)
 	-$(RM_RF) $(subst /,\,$(SUMMARIZED_PAGES_DIR))
-else
-	-$(RM_RF) $(SUMMARIZED_PAGES_DIR)
-endif
 
 # Deletes the generated markdown pages.
 clean-markdown:
 	@echo "--> Deleting markdown pages..."
-ifeq ($(OS),Windows_NT)
 	-$(RM_RF) $(subst /,\,$(MD_PAGES_DIR))
-else
-	-$(RM_RF) $(MD_PAGES_DIR)
-endif
 
 # Deletes all of the unpacked HTML files.
 clean-data:
 	@echo "--> Deleting sanitized HTML data..."
-ifeq ($(OS),Windows_NT)
 	-$(RM_RF) $(subst /,\,$(SANITIZED_DIR))
-else
-	-$(RM_RF) $(SANITIZED_DIR)
-endif
