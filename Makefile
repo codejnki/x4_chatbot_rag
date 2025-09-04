@@ -40,9 +40,18 @@ VECTOR_STORE_TIMESTAMP  := $(VECTOR_STORE_DIR)/.processed
 KEYWORDS_TIMESTAMP      := $(KEYWORDS_CACHE_DIR)/.processed
 
 # --- Phony Targets ---
-.PHONY: all data markdown markdown-summaries changelog-chunks wiki-chunks merged-chunks vector-store keywords keywords-refined clean-all clean-data clean-markdown clean-markdown-summaries clean-changelog-chunks clean-wiki-chunks clean-merged-chunks clean-vector-store clean-keywords clean-keywords-refined
+.PHONY: all data markdown markdown-summaries changelog-chunks wiki-chunks merged-chunks vector-store keywords keywords-refined clean-all clean-data clean-markdown clean-markdown-summaries clean-changelog-chunks clean-wiki-chunks clean-merged-chunks clean-vector-store clean-keywords clean-keywords-refined run help
 
 # --- Main Targets ---
+.DEFAULT_GOAL := run
+
+# 10. Run Application
+# Starts the FastAPI server after ensuring all data is built.
+run: all
+	@echo "--> Starting the FastAPI server..."
+	@$(PYTHON) main.py
+
+# Build all data artifacts.
 all: keywords-refined
 
 # 9. Refine Keywords
@@ -121,6 +130,25 @@ $(UNZIP_TIMESTAMP): $(ZIP_FILE) 00_unzip_data.py
 	@echo "--> Unzipping and sanitizing wiki data..."
 	@$(PYTHON) 00_unzip_data.py
 	@touch $(UNZIP_TIMESTAMP)
+
+# --- Utility Targets ---
+help:
+	@echo "Available targets:"
+	@echo "  run                      - (Default) Builds all data and starts the FastAPI server."
+	@echo "  all                      - Builds all data artifacts required by the application."
+	@echo ""
+	@echo "  clean-all                - Removes all generated data, caches, and artifacts."
+	@echo "  clean-data               - Deletes the unzipped and sanitized HTML data."
+	@echo "  clean-markdown           - Deletes the generated markdown pages."
+	@echo "  clean-markdown-summaries - Deletes the summarized markdown pages."
+	@echo "  clean-changelog-chunks   - Deletes the processed changelog chunks file."
+	@echo "  clean-wiki-chunks        - Deletes the processed wiki chunks file."
+	@echo "  clean-merged-chunks      - Deletes the merged chunks file."
+	@echo "  clean-vector-store       - Deletes the vector store."
+	@echo "  clean-keywords           - Deletes the keyword files and cache."
+	@echo "  clean-keywords-refined   - Deletes the refined keywords file."
+	@echo ""
+	@echo "  help                     - Shows this help message."
 
 # --- Clean Targets ---
 clean-all: clean-data clean-markdown clean-markdown-summaries clean-changelog-chunks clean-wiki-chunks clean-merged-chunks clean-vector-store clean-keywords clean-keywords-refined
