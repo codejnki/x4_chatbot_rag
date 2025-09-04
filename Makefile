@@ -23,23 +23,44 @@ SANITIZED_DIR           := x4-foundations-wiki/hashed_pages
 MD_PAGES_DIR            := x4-foundations-wiki/pages_md
 SUMMARIZED_PAGES_DIR    := x4-foundations-wiki/pages_summarized
 VECTOR_STORE_DIR        := faiss_index
+KEYWORDS_CACHE_DIR      := .keyword_cache
 
 # Data Artifacts
 CHANGELOG_CHUNKS_FILE   := x4_changel_chunks.json
 WIKI_CHUNKS_FILE        := x4_wiki_chunks.json
 ALL_CHUNKS_FILE         := x4_all_chunks.json
+KEYWORDS_FILE           := x4_keywords.json
+REFINED_KEYWORDS_FILE   := x4_keywords_refined.json
 
 # Timestamp files to track step completion
 UNZIP_TIMESTAMP         := $(SANITIZED_DIR)/.unzipped
 MARKDOWN_TIMESTAMP      := $(MD_PAGES_DIR)/.processed
 SUMMARIES_TIMESTAMP     := $(SUMMARIZED_PAGES_DIR)/.processed
 VECTOR_STORE_TIMESTAMP  := $(VECTOR_STORE_DIR)/.processed
+KEYWORDS_TIMESTAMP      := $(KEYWORDS_CACHE_DIR)/.processed
 
 # --- Phony Targets ---
-.PHONY: all data markdown markdown-summaries changelog-chunks wiki-chunks merged-chunks vector-store clean-all clean-data clean-markdown clean-markdown-summaries clean-changelog-chunks clean-wiki-chunks clean-merged-chunks clean-vector-store
+.PHONY: all data markdown markdown-summaries changelog-chunks wiki-chunks merged-chunks vector-store keywords keywords-refined clean-all clean-data clean-markdown clean-markdown-summaries clean-changelog-chunks clean-wiki-chunks clean-merged-chunks clean-vector-store clean-keywords clean-keywords-refined
 
 # --- Main Targets ---
-all: data markdown markdown-summaries changelog-chunks wiki-chunks merged-chunks vector-store
+all: keywords-refined
+
+# 9. Refine Keywords
+# Filters the raw keyword list to create a domain-specific list.
+keywords-refined: $(REFINED_KEYWORDS_FILE)
+
+$(REFINED_KEYWORDS_FILE): $(KEYWORDS_FILE) 05_refine_keywords.py
+	@echo "--> Refining keyword list..."
+	@$(PYTHON) 05_refine_keywords.py
+
+# 8. Generate Keywords
+# Extracts keywords from all chunks using an LLM.
+keywords: $(KEYWORDS_TIMESTAMP)
+
+$(KEYWORDS_TIMESTAMP): $(VECTOR_STORE_TIMESTAMP) 04_generate_keywords.py
+	@echo "--> Generating keywords from chunks (this may take a long time)..."
+	@$(PYTHON) 04_generate_keywords.py
+	@touch $(KEYWORDS_TIMESTAMP)
 
 # 7. Build Vector Store
 # Creates a FAISS vector store from the merged chunks.
@@ -102,7 +123,27 @@ $(UNZIP_TIMESTAMP): $(ZIP_FILE) 00_unzip_data.py
 	@touch $(UNZIP_TIMESTAMP)
 
 # --- Clean Targets ---
-clean-all: clean-data clean-markdown clean-markdown-summaries clean-changelog-chunks clean-wiki-chunks clean-merged-chunks clean-vector-store
+clean-all: clean-data clean-markdown clean-markdown-summaries clean-changelog-chunks clean-wiki-chunks clean-merged-chunks clean-vector-store clean-keywords clean-keywords-refined
+
+# Deletes the refined keywords file.
+clean-keywords-refined:
+	@echo "--> Deleting refined keywords file..."
+ifeq ($(OS),Windows_NT)
+	-del $(subst /,\,$(REFINED_KEYWORDS_FILE))
+else
+	-$(RM_RF) $(REFINED_KEYWORDS_FILE)
+endif
+
+# Deletes the keyword files and cache.
+clean-keywords:
+	@echo "--> Deleting keyword files and cache..."
+ifeq ($(OS),Windows_NT)
+	-$(RM_RF) $(subst /,\,$(KEYWORDS_CACHE_DIR))
+	-del $(subst /,\,$(KEYWORDS_FILE))
+else
+	-$(RM_RF) $(KEYWORDS_CACHE_DIR)
+	-$(RM_RF) $(KEYWORDS_FILE)
+endif
 
 # Deletes the vector store.
 clean-vector-store:
