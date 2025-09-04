@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 # --- End Logging Configuration ---
 
 # --- Configuration ---
-CHUNKS_PATH = "x4_wiki_chunks.json"
+CHUNKS_PATH = "x4_all_chunks.json"
 PROMPT_PATH = "prompts/keyword_extractor_prompt.txt"
 OUTPUT_PATH = "x4_keywords.json"
 CACHE_DIR = Path(".keyword_cache")

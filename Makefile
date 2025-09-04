@@ -1,39 +1,10 @@
-# Makefile for both Windows and Unix-like systems
+# Makefile for the X4 RAG Chatbot Data Pipeline
+# This version uses a strict file-based dependency chain to prevent unnecessary rebuilds.
 
-# Data files
-ZIP_FILE := x4-foundations-wiki.zip
-WIKI_DIR := x4-foundations-wiki
-HASH_FILE := $(WIKI_DIR)/file_hashes.json
-
-# --- Directories ---
-SANITIZED_DIR := $(WIKI_DIR)/hashed_pages
-MD_PAGES_DIR := $(WIKI_DIR)/pages_md
-SUMMARIZED_PAGES_DIR := $(WIKI_DIR)/pages_summarized
-KEYWORDS_CACHE_DIR := .keyword_cache
-
-# --- Python Scripts ---
-UNZIP_SCRIPT := 00_unzip_data.py
-HTML_TO_MD_SCRIPT := 01a_html_to_md.py
-SUMMARIZE_MD_SCRIPT := 01b_summarize_md.py
-GET_FILES_TO_PROCESS_SCRIPT := 01c_get_files_to_process.py
-CHUNK_SCRIPT := 02_chunk_corpus.py
-VECTOR_STORE_SCRIPT := 03_build_vector_store.py
-KEYWORDS_SCRIPT := 04_generate_keywords.py
-REFINE_KEYWORDS_SCRIPT := 05_refine_keywords.py
-
-# --- Generated Files ---
-CHUNKS_FILE := x4_wiki_chunks.json
-VECTOR_STORE_DIR := faiss_index
-KEYWORDS_FILE := x4_keywords.json
-REFINED_KEYWORDS_FILE := x4_keywords_refined.json
-VECTOR_STORE_TIMESTAMP := $(VECTOR_STORE_DIR)/.processed
-SUMMARIZED_PAGES_TIMESTAMP := $(SUMMARIZED_PAGES_DIR)/.processed
-KEYWORDS_TIMESTAMP := $(KEYWORDS_CACHE_DIR)/.processed
-
-# Define the virtual environment directory
+# --- OS & Environment Setup ---
 VENV_DIR := .venv
 
-# OS-specific configuration
+# OS-specific configuration for Python executable and virtual environment paths
 ifeq ($(OS),Windows_NT)
     PY := python
     VENV_PATH_DIR := Scripts
@@ -46,191 +17,166 @@ else
     EXE :=
 endif
 
-# Define the Python interpreter and pip from within the virtual environment
 PYTHON := $(VENV_DIR)/$(VENV_PATH_DIR)/python$(EXE)
 PIP := $(VENV_DIR)/$(VENV_PATH_DIR)/pip$(EXE)
 VENV_TIMESTAMP := $(VENV_DIR)/.installed
 
+# --- File & Directory Definitions ---
+# Source Data
+ZIP_FILE := x4-foundations-wiki.zip
+
+# Intermediate Directories
+WIKI_DIR := x4-foundations-wiki
+SANITIZED_DIR := $(WIKI_DIR)/hashed_pages
+MD_PAGES_DIR := $(WIKI_DIR)/pages_md
+SUMMARIZED_PAGES_DIR := $(WIKI_DIR)/pages_summarized
+VECTOR_STORE_DIR := faiss_index
+KEYWORDS_CACHE_DIR := .keyword_cache
+
+# Final Data Artifacts
+HASH_FILE := $(WIKI_DIR)/file_hashes.json
+SUMMARIZED_PAGES_TIMESTAMP := $(SUMMARIZED_PAGES_DIR)/.processed
+WIKI_CHUNKS_FILE := x4_wiki_chunks.json
+CHANGELOG_CHUNKS_FILE := x4_changelog_chunks.json
+ALL_CHUNKS_FILE := x4_all_chunks.json
+VECTOR_STORE_TIMESTAMP := $(VECTOR_STORE_DIR)/.processed
+KEYWORDS_FILE := x4_keywords.json
+REFINED_KEYWORDS_FILE := x4_keywords_refined.json
+KEYWORDS_TIMESTAMP := $(KEYWORDS_CACHE_DIR)/.processed
+
 # --- Main Targets ---
 .DEFAULT_GOAL := run
 
-.PHONY: data markdown summarize chunks vector-store keywords keywords-refined clean-all clean-hashed-html clean-md-pages clean-summarized-pages clean-chunks clean-vector-store clean-keywords-cache clean-keywords-files clean-venv freeze help all run install
+# Phony targets do not represent files and should always run.
+.PHONY: all run install freeze help clean clean-data clean-md clean-summaries clean-chunks clean-vector-store clean-keywords clean-venv
 
-# Run the entire pipeline and start the server
+# The 'all' target is the main entry point for building data.
+all: $(REFINED_KEYWORDS_FILE) $(VECTOR_STORE_TIMESTAMP)
+
+# The 'run' target builds everything and then starts the server.
 run: all
 	@echo "--> Starting the FastAPI server..."
 	$(PYTHON) main.py
 
-# Build all data artifacts after ensuring dependencies are installed
-all: $(VENV_TIMESTAMP) vector-store keywords-refined
+# The 'install' target sets up the virtual environment and dependencies.
+install: $(VENV_TIMESTAMP)
 
-# A phony target to make 'make install' user-friendly
-install: 
-	$(VENV_TIMESTAMP)
-
-# Install dependencies only if venv is new or requirements.txt has changed
-$(VENV_TIMESTAMP): $(PIP) requirements.txt
+# --- Dependency Installation ---
+$(VENV_TIMESTAMP): requirements.txt $(PIP)
 	@echo "--> Installing/updating dependencies..."
 	$(PIP) install -r requirements.txt
-	touch $(VENV_TIMESTAMP)
+	@touch $(VENV_TIMESTAMP)
 
-# Create virtual environment if its pip executable doesn't exist
 $(PIP):
 	@echo "--> Creating virtual environment in $(VENV_DIR)..."
 	$(PY) -m venv $(VENV_DIR)
 
-# --- Data Pipeline ---
+# --- Data Pipeline (File-Based Dependencies) ---
 
-# Generate the raw keyword list from the chunks using an LLM.
-keywords: $(KEYWORDS_TIMESTAMP)
+# 7. Refine Keywords: Depends on the raw keywords file.
+$(REFINED_KEYWORDS_FILE): $(KEYWORDS_FILE) 05_refine_keywords.py
+	@echo "--> Refining keyword list..."
+	@$(PYTHON) 05_refine_keywords.py
 
-$(KEYWORDS_TIMESTAMP): $(VECTOR_STORE_TIMESTAMP) $(KEYWORDS_SCRIPT)
+# 6. Generate Raw Keywords: Depends on the vector store being complete.
+$(KEYWORDS_FILE): $(KEYWORDS_TIMESTAMP)
+
+$(KEYWORDS_TIMESTAMP): $(VECTOR_STORE_TIMESTAMP) 04_generate_keywords.py
 	@echo "--> Generating keywords from chunks (this may take a long time)..."
-	@$(PYTHON) $(KEYWORDS_SCRIPT)
+	@$(PYTHON) 04_generate_keywords.py
 	@touch $(KEYWORDS_TIMESTAMP)
 
-# Generate the final, refined keyword list.
-keywords-refined: $(REFINED_KEYWORDS_FILE)
-
-$(REFINED_KEYWORDS_FILE): $(KEYWORDS_TIMESTAMP) $(REFINE_KEYWORDS_SCRIPT)
-	@echo "--> Refining keyword list..."
-	@$(PYTHON) $(REFINE_KEYWORDS_SCRIPT)
-
-# Build the FAISS vector store from the chunks.
-vector-store: $(VECTOR_STORE_TIMESTAMP)
-
-$(VECTOR_STORE_TIMESTAMP): $(CHUNKS_FILE) $(VECTOR_STORE_SCRIPT)
-	@echo "--> Building vector store from chunks..."
-	@$(PYTHON) $(VECTOR_STORE_SCRIPT)
+# 5. Build Vector Store: Depends on the merged chunks file.
+$(VECTOR_STORE_TIMESTAMP): $(ALL_CHUNKS_FILE) 03_build_vector_store.py
+	@echo "--> Building vector store from all chunks..."
+	@$(PYTHON) 03_build_vector_store.py
 	@touch $(VECTOR_STORE_TIMESTAMP)
 
-# Create the chunked JSON file from the corpus.
-chunks: $(CHUNKS_FILE)
+# 4. Merge Chunks: Depends on both the wiki chunks and the changelog chunks.
+$(ALL_CHUNKS_FILE): $(WIKI_CHUNKS_FILE) $(CHANGELOG_CHUNKS_FILE) 02b_merge_chunks.py
+	@echo "--> Merging wiki and changelog chunk files..."
+	@$(PYTHON) 02b_merge_chunks.py
 
-$(CHUNKS_FILE): $(SUMMARIZED_PAGES_TIMESTAMP) $(CHUNK_SCRIPT)
-	@echo "--> Chunking corpus file..."
-	@$(PYTHON) $(CHUNK_SCRIPT)
+# 3b. Process Changelogs: Depends on the markdown files being generated.
+$(CHANGELOG_CHUNKS_FILE): $(SUMMARIZED_PAGES_TIMESTAMP) 01d_process_changelogs.py
+	@echo "--> Processing changelogs into structured chunks..."
+	@$(PYTHON) 01d_process_changelogs.py
 
-# Create the summarized markdown files.
-summarize: markdown
-	@echo "--> Checking for markdown files to summarize..."
-	@PROCESS_LIST=$($(PYTHON) $(GET_FILES_TO_PROCESS_SCRIPT) $(MD_PAGES_DIR) $(SUMMARIZED_PAGES_DIR) .md .md); \
-	if [ -n "$$PROCESS_LIST" ]; then \
-		echo "--> Summarizing markdown files..."; \
-		echo "$$PROCESS_LIST" | xargs -P 4 -I {} $(PYTHON) $(SUMMARIZE_MD_SCRIPT) {}; \
-		touch $(SUMMARIZED_PAGES_TIMESTAMP); \
-	else \
-		echo "--> No markdown files to summarize. Skipping."; \
-	fi
+# 3a. Chunk Wiki Corpus: Depends on the summarized markdown files.
+$(WIKI_CHUNKS_FILE): $(SUMMARIZED_PAGES_TIMESTAMP) 02_chunk_corpus.py
+	@echo "--> Chunking summarized wiki files..."
+	@$(PYTHON) 02_chunk_corpus.py
 
-# Create the markdown files from the sanitized html files.
-markdown: data
+# 2. Summarize Markdown: This is a complex step. It depends on the existence of markdown files.
+# We use a timestamp file to track completion because it processes a whole directory.
+$(SUMMARIZED_PAGES_TIMESTAMP): $(HASH_FILE) 01b_summarize_md.py 01a_html_to_md.py 01c_get_files_to_process.py
 	@echo "--> Converting HTML to Markdown..."
-	@$(PYTHON) $(GET_FILES_TO_PROCESS_SCRIPT) $(SANITIZED_DIR) $(MD_PAGES_DIR) .html .md | \
-	xargs -P 8 -I {} $(PYTHON) $(HTML_TO_MD_SCRIPT) {}
+	@$(PYTHON) 01c_get_files_to_process.py $(SANITIZED_DIR) $(MD_PAGES_DIR) .html .md | xargs -P 8 -I {} $(PYTHON) 01a_html_to_md.py {}
+	@echo "--> Summarizing markdown files..."
+	@PROCESS_LIST=$($(PYTHON) 01c_get_files_to_process.py $(MD_PAGES_DIR) $(SUMMARIZED_PAGES_DIR) .md .md); \
+	if [ -n "$$PROCESS_LIST" ]; then \
+		echo "$$PROCESS_LIST" | xargs -P 4 -I {} $(PYTHON) 01b_summarize_md.py {}; \
+	fi
+	@touch $(SUMMARIZED_PAGES_TIMESTAMP)
 
-# Unzip the wiki data if the zip file has changed.
-data: $(HASH_FILE)
-$(HASH_FILE): $(ZIP_FILE) $(UNZIP_SCRIPT)
+# 1. Unzip Data: The first step, depends on the zip file.
+$(HASH_FILE): $(ZIP_FILE) 00_unzip_data.py
 	@echo "--> Unzipping and sanitizing wiki data..."
-	$(PYTHON) $(UNZIP_SCRIPT)
+	@$(PYTHON) 00_unzip_data.py
 
 # --- Utility Targets ---
-
-# Freeze dependencies
-freeze: $(PIP)
+freeze:
 	@echo "--> Freezing dependencies to requirements.txt..."
 	$(PIP) freeze > requirements.txt
 
-# Clean up the project
-clean-all: clean-hashed-html clean-md-pages clean-summarized-pages clean-chunks clean-vector-store clean-keywords-cache clean-keywords-files
-	@echo "--> Full cleanup complete."
-
-clean-hashed-html:
-	@echo "--> Deleting hashed html pages..."
-ifeq ($(OS),Windows_NT)
-		-$(RM_RF) $(subst /,\,$(SANITIZED_DIR))
-		-$(RM_RF) $(subst /,\,$(HASH_FILE))	
-else
-		-$(RM_RF) $(SANITIZED_DIR)
-		-$(RM_RF) $(HASH_FILE)
-endif
-
-clean-md-pages:
-	@echo "--> Deleting markdown pages..."
-ifeq ($(OS),Windows_NT)
-		-$(RM_RF) $(subst /,\,$(MD_PAGES_DIR))
-else	
-		-$(RM_RF) $(MD_PAGES_DIR)
-endif	
-
-
-clean-summarized-pages:
-	@echo "--> Deleting summarized pages..."
-ifeq ($(OS),Windows_NT)
-		-$(RM_RF) $(subst /,\,$(SUMMARIZED_PAGES_DIR))
-else
-		-$(RM_RF) $(SUMMARIZED_PAGES_DIR)
-endif
-
-clean-chunks:
-	@echo "--> Deleting chunks file..."
-ifeq ($(OS),Windows_NT)
-		-$(RM_RF) $(subst /,\,$(CHUNKS_FILE))
-else
-		-$(RM_RF) $(CHUNKS_FILE)
-endif
-
-clean-vector-store:
-	@echo "--> Deleting vector store..."
-ifeq ($(OS),Windows_NT)
-		-$(RM_RF) $(subst /,\,$(VECTOR_STORE_DIR))
-else
-		-$(RM_RF) $(VECTOR_STORE_DIR)
-endif
-
-clean-keywords-cache:
-	@echo "--> Deleting keyword cache..."
-ifeq ($(OS),Windows_NT)
-		-$(RM_RF) $(subst /,\,$(KEYWORDS_CACHE_DIR))
-else
-		-$(RM_RF) $(KEYWORDS_CACHE_DIR)
-endif
-
-clean-keywords-files:
-	@echo "--> Deleting keyword files..."
-ifeq ($(OS),Windows_NT)
-	-$(RM_RF) $(KEYWORDS_FILE) $(REFINED_KEYWORDS_FILE)
-else
-	-$(RM_RF) $(KEYWORDS_FILE) $(REFINED_KEYWORDS_FILE)
-endif
-
-# Deletes the virtual environment
-clean-venv:
-	@echo "--> Deleting virtual environment..."
-	-$(RM_RF) $(VENV_DIR)
-	@echo "--> Virtual environment deleted."
-# Help
 help:
 	@echo "Available targets:"
 	@echo "  run                   - (Default) Builds all data and starts the server."
 	@echo "  all                   - Ensures dependencies are installed and builds all data artifacts."
 	@echo "  install               - Ensures venv exists and all dependencies are installed."
-	@echo "  data                  - Unzips the wiki data from $(ZIP_FILE)."
-	@echo "  markdown              - Generates markdown files from html."
-	@echo "  summarize             - Generates summarized markdown files."
-	@echo "  chunks                - Generates the chunked JSON file for embedding."
-	@echo "  vector-store          - Builds the FAISS vector store for the RAG model."
-	@echo "  keywords              - Generates a raw list of keywords using an LLM."
-	@echo "  keywords-refined      - Creates the final, cleaned list of keywords."
 	@echo "  freeze                - Updates requirements.txt from the current environment."
-	@echo "  clean-all             - Removes all generated data and caches."
-	@echo "  clean-hashed-html     - Deletes the hashed html pages."
-	@echo "  clean-md-pages        - Deletes the markdown pages."
-	@echo "  clean-summarized-pages- Deletes the summarized pages."
-	@echo "  clean-chunks          - Deletes the chunks file."
+	@echo "  clean                 - Removes all generated data and caches."
+	@echo "  clean-data            - Deletes the unzipped and sanitized wiki data."
+	@echo "  clean-md              - Deletes the generated markdown pages."
+	@echo "  clean-summaries       - Deletes the summarized markdown pages."
+	@echo "  clean-chunks          - Deletes all chunk files."
 	@echo "  clean-vector-store    - Deletes the vector store."
-	@echo "  clean-keywords-cache  - Deletes the keyword generation cache."
-	@echo "  clean-keywords-files  - Deletes the keyword files."
+	@echo "  clean-keywords        - Deletes the keyword files and cache."
 	@echo "  clean-venv            - Deletes the Python virtual environment."
 	@echo "  help                  - Shows this help message."
+
+# --- Clean Targets ---
+clean: clean-data clean-md clean-summaries clean-chunks clean-vector-store clean-keywords
+	@echo "--> Full cleanup complete."
+
+clean-data:
+	@echo "--> Deleting sanitized wiki data..."
+	-$(RM_RF) $(SANITIZED_DIR)
+	-$(RM_RF) $(HASH_FILE)
+	-$(RM_RF) $(WIKI_DIR)/path_map.json
+
+clean-md:
+	@echo "--> Deleting markdown pages..."
+	-$(RM_RF) $(MD_PAGES_DIR)
+
+clean-summaries:
+	@echo "--> Deleting summarized pages..."
+	-$(RM_RF) $(SUMMARIZED_PAGES_DIR)
+
+clean-chunks:
+	@echo "--> Deleting all chunk files..."
+	-$(RM_RF) $(WIKI_CHUNKS_FILE) $(CHANGELOG_CHUNKS_FILE) $(ALL_CHUNKS_FILE)
+
+clean-vector-store:
+	@echo "--> Deleting vector store..."
+	-$(RM_RF) $(VECTOR_STORE_DIR)
+
+clean-keywords:
+	@echo "--> Deleting keyword files and cache..."
+	-$(RM_RF) $(KEYWORDS_CACHE_DIR)
+	-$(RM_RF) $(KEYWORDS_FILE)
+	-$(RM_RF) $(REFINED_KEYWORDS_FILE)
+
+clean-venv:
+	@echo "--> Deleting virtual environment..."
+	-$(RM_RF) $(VENV_DIR)
