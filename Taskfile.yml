@@ -1,39 +1,28 @@
 # Taskfile for the X-Universe Data Extraction Pipeline
-# Re-implementation of the original Makefile for better readability and maintenance.
 version: '3'
 
 vars:
-  # Determine the Python executable based on the operating system.
   PYTHON: 'python'
 
   # --- File & Directory Definitions ---
-  # Source Data
   ZIP_FILE: x4-foundations-wiki.zip
-
-  # Prompts
   SUMMARIZER_PROMPT: prompts/document_summarizer_prompt.txt
-  CHANGELOG_PROMPT: prompts/changelog_analyzer_prompt.txt
-
-  # Output Directories
+  
   SANITIZED_DIR: x4-foundations-wiki/hashed_pages
   MD_PAGES_DIR: x4-foundations-wiki/pages_md
   SUMMARIZED_PAGES_DIR: x4-foundations-wiki/pages_summarized
   VECTOR_STORE_DIR: faiss_index
   KEYWORDS_CACHE_DIR: .keyword_cache
-
-  # Data Artifacts
-  CHANGELOG_CHUNKS_FILE: x4_changelog_chunks.json
-  WIKI_CHUNKS_FILE: x4_wiki_chunks.json
+  
   ALL_CHUNKS_FILE: x4_all_chunks.json
   KEYWORDS_FILE: x4_keywords.json
   REFINED_KEYWORDS_FILE: x4_keywords_refined.json
 
-  # Marker file to track step completion, replacing .unzipped and .processed
   MARKER_FILE: .task_complete
 
 tasks:
   default:
-    desc: Lists all available tasks, similar to the original 'help' target.
+    desc: Lists all available tasks.
     cmds:
       - task --list-all
     silent: true
@@ -50,7 +39,7 @@ tasks:
 
   all:
     desc: Builds all data artifacts required by the application.
-    deps: [9-keywords-refined]
+    deps: [6-keywords-refined]
 
   # ---------------------------------------------------------------------------
   # --- Data Processing Pipeline (in order)
@@ -81,7 +70,7 @@ tasks:
       - touch {{.MD_PAGES_DIR}}/{{.MARKER_FILE}}
 
   '3-markdown-summaries':
-    desc: 'Step 3: Enriches markdown files with LLM-generated summaries.'
+    desc: 'Step 3: Enriches markdown files with summaries and unrolled data.'
     deps: ['2-markdown']
     sources:
       - '{{.MD_PAGES_DIR}}/{{.MARKER_FILE}}'
@@ -93,45 +82,21 @@ tasks:
     cmds:
       - '{{.PYTHON}} src/01c_get_files_to_process.py {{.MD_PAGES_DIR}} {{.SUMMARIZED_PAGES_DIR}} .md .md | xargs -P 2 -I {} {{.PYTHON}} src/01b_summarize_md.py {}'
       - touch {{.SUMMARIZED_PAGES_DIR}}/{{.MARKER_FILE}}
-
-  '4-changelog-chunks':
-    desc: 'Step 4: Extracts and structures data from changelog files.'
-    deps: ['2-markdown']
-    sources:
-      - '{{.MD_PAGES_DIR}}/{{.MARKER_FILE}}'
-      - src/01d_process_changelogs.py
-      - '{{.CHANGELOG_PROMPT}}'
-    generates:
-      - '{{.CHANGELOG_CHUNKS_FILE}}'
-    cmds:
-      - '{{.PYTHON}} src/01d_process_changelogs.py'
-
-  '5-wiki-chunks':
-    desc: 'Step 5: Breaks down summarized markdown files into smaller chunks.'
+  
+  '4-chunks':
+    desc: 'Step 4: Breaks down all summarized/enriched markdown files into smaller chunks.'
     deps: ['3-markdown-summaries']
     sources:
       - '{{.SUMMARIZED_PAGES_DIR}}/{{.MARKER_FILE}}'
       - src/02_chunk_corpus.py
     generates:
-      - '{{.WIKI_CHUNKS_FILE}}'
+      - '{{.ALL_CHUNKS_FILE}}'
     cmds:
       - '{{.PYTHON}} src/02_chunk_corpus.py'
 
-  '6-merged-chunks':
-    desc: 'Step 6: Combines the wiki and changelog chunks into a single file.'
-    deps: ['5-wiki-chunks', '4-changelog-chunks']
-    sources:
-      - '{{.WIKI_CHUNKS_FILE}}'
-      - '{{.CHANGELOG_CHUNKS_FILE}}'
-      - src/02b_merge_chunks.py
-    generates:
-      - '{{.ALL_CHUNKS_FILE}}'
-    cmds:
-      - '{{.PYTHON}} src/02b_merge_chunks.py'
-
-  '7-vector-store':
-    desc: 'Step 7: Creates a FAISS vector store from the merged chunks.'
-    deps: ['6-merged-chunks']
+  '5-vector-store':
+    desc: 'Step 5: Creates a FAISS vector store from the merged chunks.'
+    deps: ['4-chunks']
     sources:
       - '{{.ALL_CHUNKS_FILE}}'
       - src/03_build_vector_store.py
@@ -141,9 +106,9 @@ tasks:
       - '{{.PYTHON}} src/03_build_vector_store.py'
       - touch {{.VECTOR_STORE_DIR}}/{{.MARKER_FILE}}
 
-  '8-keywords':
-    desc: 'Step 8: Generates keywords from the data chunks.'
-    deps: ['7-vector-store']
+  '6-keywords':
+    desc: 'Step 6: Generates keywords from the data chunks.'
+    deps: ['5-vector-store']
     sources:
       - '{{.VECTOR_STORE_DIR}}/{{.MARKER_FILE}}'
       - src/04_generate_keywords.py
@@ -152,9 +117,9 @@ tasks:
     cmds:
       - '{{.PYTHON}} src/04_generate_keywords.py'
 
-  '9-keywords-refined':
-    desc: 'Step 9: Filters the keyword list to create a domain-specific list.'
-    deps: ['8-keywords']
+  '6-keywords-refined':
+    desc: 'Step 7: Filters the keyword list to create a domain-specific list.'
+    deps: ['6-keywords']
     sources:
       - '{{.KEYWORDS_FILE}}'
       - src/05_refine_keywords.py
@@ -195,7 +160,7 @@ tasks:
   clean:chunks:
     desc: Deletes all generated chunk files.
     cmds:
-      - rm -f {{.CHANGELOG_CHUNKS_FILE}} {{.WIKI_CHUNKS_FILE}} {{.ALL_CHUNKS_FILE}}
+      - rm -f {{.ALL_CHUNKS_FILE}}
 
   clean:vector-store:
     desc: Deletes the FAISS vector store.
@@ -207,3 +172,4 @@ tasks:
     cmds:
       - rm -rf {{.KEYWORDS_CACHE_DIR}}
       - rm -f {{.KEYWORDS_FILE}} {{.REFINED_KEYWORDS_FILE}}
+

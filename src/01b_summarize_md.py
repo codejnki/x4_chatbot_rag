@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 DATA_SOURCE_DIR = Path("x4-foundations-wiki")
 MD_PAGES_DIR = Path(DATA_SOURCE_DIR, "pages_md")
 SUMMARIZED_PAGES_DIR = Path(DATA_SOURCE_DIR, "pages_summarized")
+CHANGELOG_KEYWORDS = ["changelog", "patch history"]
 
 @dataclass
 class Section:
@@ -45,17 +46,28 @@ TOKENIZER = tiktoken.get_encoding("cl100k_base")
 PROMPT_TEMPLATE_SIZE = len(TOKENIZER.encode(SUMMARIZER_PROMPT_TEMPLATE.format(task="", content="", context_path="")))
 EFFECTIVE_CONTEXT_SIZE = MAX_CONTEXT_TOKENS - PROMPT_TEMPLATE_SIZE - 200
 
+def is_changelog_file(file_path: Path, md_content: str) -> bool:
+    """Checks if a file is a changelog based on its name or content."""
+    for keyword in CHANGELOG_KEYWORDS:
+        if keyword in file_path.name.lower():
+            return True
+    if any(keyword in md_content[:200].lower() for keyword in CHANGELOG_KEYWORDS):
+        return True
+    return False
+
 def strip_until_newline(text: str) -> str:
     return re.sub(r'^.*\n', '', text, count=1)
 
 def call_summarizer(content: str, task: str, context_path: str) -> str:
     try:
-        if not content:
+        if not content.strip():
             return ""
-        if len(content.split()) < 10:
-            return strip_until_newline(content.strip())
+        if len(content.split()) < 10 and task != "SUMMARIZE_CHANGELOG_ENTRY":
+             return strip_until_newline(content.strip())
+
         formatted_prompt = SUMMARIZER_PROMPT_TEMPLATE.format(task=task, content=content, context_path=context_path)
         prompt_tokens = len(TOKENIZER.encode(formatted_prompt))
+
         if prompt_tokens > MAX_CONTEXT_TOKENS:
             logger.warning(f"Prompt for task {task} with context '{context_path}' is too large ({prompt_tokens} tokens).")
             return ""
@@ -100,24 +112,17 @@ def build_section_tree(md_content: str) -> Section:
     root = Section(title="root", level=0)
     node_stack = [root]
     
-    # Stores the start line for the content of the current section
     last_line = 0
 
     for i, token in enumerate(tokens):
         if token.type == 'heading_open':
-            # 1. Finalize the content of the PREVIOUS section
-            # The content ends on the line just before the new heading starts.
-            # token.map provides the [start_line, end_line] for the heading element.
             current_heading_start_line = token.map[0]
             
-            # Slice the original document lines to get the content
             content_lines = lines[last_line:current_heading_start_line]
             node_stack[-1].content = "\n".join(content_lines).strip()
 
-            # The content for the NEXT section starts after this heading ends.
             last_line = token.map[1]
 
-            # 2. Create and place the new section node
             level = int(token.tag[1:])
             title = tokens[i+1].content.strip() if (i+1) < len(tokens) else ""
             new_node = Section(title=title, level=level)
@@ -130,7 +135,6 @@ def build_section_tree(md_content: str) -> Section:
             new_node.parent = parent
             node_stack.append(new_node)
 
-    # After the loop, capture the remaining content for the very last section
     if last_line < len(lines):
         content_lines = lines[last_line:]
         node_stack[-1].content = "\n".join(content_lines).strip()
@@ -139,28 +143,20 @@ def build_section_tree(md_content: str) -> Section:
 
 def summarize_tree_post_order(node: Section, context_path: str = ""):
     """Recursively summarizes the tree from the bottom up (post-order traversal)."""
-    # Root node has special handling for context
     if node.level == 0:
-        # Try to find a document title from the first H1
         first_h1 = next((child for child in node.children if child.level == 1), None)
-        if first_h1:
-             context_path = first_h1.title
-        else:
-            # Fallback for documents without an H1
-             context_path = "Document Overview"
+        context_path = first_h1.title if first_h1 else "Document Overview"
+    
     for child in node.children:
         child_context_path = f"{context_path} > {child.title}"
         summarize_tree_post_order(child, child_context_path)
 
-    # For parent nodes, combine their content with the summaries of their children
     child_summaries = "".join([f"Sub-section '{c.title}': {c.summary}" for c in node.children if c.summary])
 
-    # Content to be summarized for the current node
     content_to_summarize = node.content
     if child_summaries:
         content_to_summarize += "\n\n" + "Summaries of sub-sections:\n" + child_summaries
 
-    # Avoid summarizing the root container if it has no direct content and no child summaries
     if node.level == 0 and not node.content.strip() and not child_summaries:
         node.summary = ""
         return
@@ -182,19 +178,15 @@ def summarize_tree_post_order(node: Section, context_path: str = ""):
 
     node.summary = summary_text
     
-    # CORRECTED LOGIC: Find all tables, unroll each one individually,
-    # and append them to the summary in a structured format.
     section_tables = find_all_tables_in_md(node.content)
     if section_tables:
         all_unrolled_content = ["\n\n---\n\n## Unrolled Table Data"]
         for i, table_md in enumerate(section_tables):
-            # Pass each individual 'table_md' to the unroller
             unrolled_table = unroll_single_table(table_md)
             if unrolled_table:
                 all_unrolled_content.append(f"\n\n**Table {i+1}**")
                 all_unrolled_content.append(unrolled_table)
         
-        # Append the final, combined string to the summary
         if len(all_unrolled_content) > 1:
              node.summary += "".join(all_unrolled_content)
 
@@ -204,14 +196,11 @@ def format_summary_appendix(node: Section) -> str:
         return ""
 
     parts = []
-    # Only add a header for non-root nodes that have a summary
     if node.level > 0 and node.summary:
-        header = '#' * (node.level + 1) # Offset for "Executive Summary" H1
+        header = '#' * (node.level + 1)
         parts.append(f"\n\n{header} {node.title}\n{node.summary}")
-    # Special case for root node with content
     elif node.level == 0 and node.summary:
         parts.append(f"\n\n## Overview\n{node.summary}")
-
 
     for child in node.children:
         parts.append(format_summary_appendix(child))
@@ -219,41 +208,26 @@ def format_summary_appendix(node: Section) -> str:
     return "".join(parts)
 
 def find_all_tables_in_md(md_content: str) -> List[str]:
-    """
-    Finds all complete Markdown tables in a string using the MarkdownIt parser's
-    token stream. This version directly uses the map from the 'table_open' token.
-    """
+    """Finds all complete Markdown tables in a string."""
     md = MarkdownIt("gfm-like")
     tokens = md.parse(md_content)
     lines = md_content.splitlines()
-    
     tables = []
 
-    # We can simplify the loop to only look for the opening token.
     for token in tokens:
-        if token.type == 'table_open':
-            # The 'map' attribute on the opening token contains [start_line, end_line]
-            # for the entire table block. It's all we need.
-            if token.map:
-                start_line, end_line = token.map
-                
-                # Slice the original lines to reconstruct the table markdown
-                table_md = "\n".join(lines[start_line:end_line])
-                tables.append(table_md)
-            
+        if token.type == 'table_open' and token.map:
+            start_line, end_line = token.map
+            table_md = "\n".join(lines[start_line:end_line])
+            tables.append(table_md)
     return tables
 
 def unroll_single_table(md_content: str) -> str:
-    """
-    Takes the markdown for a single table and converts it into a
-    structured key-value format.
-    """
+    """Converts a single markdown table into a structured key-value format."""
     md = MarkdownIt("gfm-like")
     tokens = md.parse(md_content)
-
     unrolled_content_parts = []
-    in_header = False
     headers = []
+    in_header = False
     is_data_row = False
 
     for i, token in enumerate(tokens):
@@ -265,7 +239,6 @@ def unroll_single_table(md_content: str) -> str:
         if token.type == 'tr_open':
             row_cells = []
             j = i + 1
-            # Gather all inline content tokens until the row closes
             while j < len(tokens) and tokens[j].type != 'tr_close':
                 if tokens[j].type == 'inline':
                     row_cells.append(tokens[j].content.strip())
@@ -274,24 +247,58 @@ def unroll_single_table(md_content: str) -> str:
             if in_header:
                 headers = row_cells
             elif is_data_row and headers and row_cells and any(cell for cell in row_cells):
-                # Use the first cell as the item name
                 item_name = row_cells[0] if row_cells else ""
                 if not item_name: continue
-
                 unrolled_content_parts.append(f"\n### {item_name}\n")
-
-                # Zip headers and cells to create key-value pairs
                 for header, cell in zip(headers, row_cells):
                     if header and cell and cell not in ['-', '']:
                         unrolled_content_parts.append(f"- **{header.strip()}**: {cell.strip()}\n")
-
     return "".join(unrolled_content_parts)
 
+def unroll_changelog(md_content: str) -> str:
+    """Parses a changelog file and unrolls its list items into prose."""
+    md = MarkdownIt("gfm-like")
+    tokens = md.parse(md_content)
+    
+    unrolled_parts = ["\n\n---\n\n## Unrolled Changelog Data"]
+    current_version = ""
+    in_top_level_list = False
+    in_nested_list = False
+
+    for i, token in enumerate(tokens):
+        if token.type == 'bullet_list_open':
+            in_top_level_list = not in_nested_list
+            in_nested_list = True if in_top_level_list and in_nested_list else in_nested_list
+        elif token.type == 'bullet_list_close':
+            if in_nested_list: in_nested_list = False
+            else: in_top_level_list = False
+        elif token.type == 'list_item_open':
+            item_content_token = tokens[i+2]
+            if item_content_token.type == 'inline':
+                item_content = item_content_token.content.strip()
+                if in_top_level_list and not in_nested_list:
+                    current_version = item_content
+                    unrolled_parts.append(f"\n### Version {current_version}\n")
+                elif in_nested_list and current_version:
+                    context_for_llm = f"Version: {current_version}\nEntry: {item_content}"
+                    prose_entry = call_summarizer(context_for_llm, "SUMMARIZE_CHANGELOG_ENTRY", f"Changelog > {current_version}")
+                    if prose_entry:
+                        unrolled_parts.append(f"- {prose_entry}\n")
+
+    if len(unrolled_parts) > 1:
+        return "".join(unrolled_parts)
+    return ""
+
 def summarize_and_enrich_content(md_content: str, file_path_for_logging: Path) -> str:
+    """Orchestrates the summarization and enrichment process for a markdown file."""
+    if is_changelog_file(file_path_for_logging, md_content):
+        logger.info(f"Processing '{file_path_for_logging.name}' as a changelog file.")
+        unrolled_changelog_content = unroll_changelog(md_content)
+        return md_content + unrolled_changelog_content
+
     logger.info(f"Building section tree for {file_path_for_logging.name}...")
     document_tree = build_section_tree(md_content)
 
-    # If the document has no sections and is short, don't summarize
     if not document_tree.children and len(TOKENIZER.encode(md_content)) < 500:
         logger.info("Document is short and has no sections, skipping summarization.")
         return md_content
@@ -311,16 +318,11 @@ def summarize_and_enrich_content(md_content: str, file_path_for_logging: Path) -
 def main():
     parser = argparse.ArgumentParser(description="Summarize and enrich a single Markdown file.")
     parser.add_argument("input_file", type=str, help="Path to the input Markdown file relative to the MD pages directory.")
-
     args = parser.parse_args()
     clean_input_file = args.input_file.strip()
 
-
     input_file_path = Path(MD_PAGES_DIR, clean_input_file)
     output_file_path = Path(SUMMARIZED_PAGES_DIR, clean_input_file)
-
-    logger.info(input_file_path)
-    logger.info(output_file_path)
 
     if not input_file_path.exists():
         logger.error(f"Input file not found: {input_file_path}")
@@ -339,6 +341,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
