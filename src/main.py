@@ -1,17 +1,15 @@
 # main.py
-
 import logging
 from logging_config import configure_logging
-
-
 
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api_routes import router as api_router
 
-configure_logging()
 logger = logging.getLogger(__name__)
+
+logger.debug("Logger in main.py is configured.")
 
 app = FastAPI(
     title="X4 RAG API",
@@ -30,4 +28,4 @@ app.add_middleware(
 app.include_router(api_router)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=8001, log_config=None)

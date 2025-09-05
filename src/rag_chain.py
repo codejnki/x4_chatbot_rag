@@ -1,3 +1,4 @@
+# src/rag_chain.py
 import logging
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import BaseMessage
