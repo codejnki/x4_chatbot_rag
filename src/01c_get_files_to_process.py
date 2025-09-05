@@ -3,16 +3,9 @@
 import argparse
 import logging
 from pathlib import Path
+from logging_config import configure_logging
 
-# --- Logging Configuration ---
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-    handlers=[
-        logging.FileHandler("console.log"),
-        logging.StreamHandler()
-    ]
-)
+configure_logging()
 logger = logging.getLogger(__name__)
 # --- End Logging Configuration ---
 

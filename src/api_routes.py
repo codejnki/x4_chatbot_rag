@@ -1,7 +1,8 @@
 import json
 import time
 import uuid
-from fastapi import APIRouter, Response
+
+from fastapi import APIRouter, Response, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from api_models import ChatCompletionRequest, ChatCompletionResponse, ChatCompletionResponseChoice, ResponseMessage, UsageInfo
 from rag_chain import X4RAGChain
@@ -13,7 +14,7 @@ rag_pipeline = X4RAGChain()
 @router.post("/v1/chat/completions")
 async def chat_completions(request: ChatCompletionRequest):
     if not request.messages:
-        return Response(status_code=400, content="Messages list is empty.")
+        raise HTTPException(status_code=400, detail="Messages list is empty.")
 
     user_query = request.messages[-1].content
     chat_history = []
@@ -44,3 +45,5 @@ async def chat_completions(request: ChatCompletionRequest):
                 full_response_content += answer_chunk
         response = ChatCompletionResponse(id=f"chatcmpl-{uuid.uuid4()}", created=int(time.time()), model=request.model, choices=[ChatCompletionResponseChoice(index=0, message=ResponseMessage(role="assistant", content=full_response_content), finish_reason="stop")], usage=UsageInfo())
         return response
+
+

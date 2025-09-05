@@ -46,7 +46,7 @@ tasks:
     desc: (Default) Builds all data and starts the FastAPI server.
     deps: [all]
     cmds:
-      - '{{.PYTHON}} main.py'
+      - '{{.PYTHON}} src/main.py'
 
   all:
     desc: Builds all data artifacts required by the application.
@@ -60,11 +60,11 @@ tasks:
     desc: 'Step 1: Unzips and sanitizes the raw wiki HTML data.'
     sources:
       - '{{.ZIP_FILE}}'
-      - 00_unzip_data.py
+      - src/00_unzip_data.py
     generates:
       - '{{.SANITIZED_DIR}}/{{.MARKER_FILE}}'
     cmds:
-      - '{{.PYTHON}} 00_unzip_data.py'
+      - '{{.PYTHON}} src/00_unzip_data.py'
       - touch {{.SANITIZED_DIR}}/{{.MARKER_FILE}}
 
   '2-markdown':
@@ -72,12 +72,12 @@ tasks:
     deps: ['1-data']
     sources:
       - '{{.SANITIZED_DIR}}/{{.MARKER_FILE}}'
-      - 01a_html_to_md.py
-      - 01c_get_files_to_process.py
+      - src/01a_html_to_md.py
+      - src/01c_get_files_to_process.py
     generates:
       - '{{.MD_PAGES_DIR}}/{{.MARKER_FILE}}'
     cmds:
-      - '{{.PYTHON}} 01c_get_files_to_process.py {{.SANITIZED_DIR}} {{.MD_PAGES_DIR}} .html .md | xargs -P 8 -I {} {{.PYTHON}} 01a_html_to_md.py {}'
+      - '{{.PYTHON}} src/01c_get_files_to_process.py {{.SANITIZED_DIR}} {{.MD_PAGES_DIR}} .html .md | xargs -P 8 -I {} {{.PYTHON}} src/01a_html_to_md.py {}'
       - touch {{.MD_PAGES_DIR}}/{{.MARKER_FILE}}
 
   '3-markdown-summaries':
@@ -85,13 +85,13 @@ tasks:
     deps: ['2-markdown']
     sources:
       - '{{.MD_PAGES_DIR}}/{{.MARKER_FILE}}'
-      - 01b_summarize_md.py
-      - 01c_get_files_to_process.py
+      - src/01b_summarize_md.py
+      - src/01c_get_files_to_process.py
       - '{{.SUMMARIZER_PROMPT}}'
     generates:
       - '{{.SUMMARIZED_PAGES_DIR}}/{{.MARKER_FILE}}'
     cmds:
-      - '{{.PYTHON}} 01c_get_files_to_process.py {{.MD_PAGES_DIR}} {{.SUMMARIZED_PAGES_DIR}} .md .md | xargs -P 2 -I {} {{.PYTHON}} 01b_summarize_md.py {}'
+      - '{{.PYTHON}} src/01c_get_files_to_process.py {{.MD_PAGES_DIR}} {{.SUMMARIZED_PAGES_DIR}} .md .md | xargs -P 2 -I {} {{.PYTHON}} src/01b_summarize_md.py {}'
       - touch {{.SUMMARIZED_PAGES_DIR}}/{{.MARKER_FILE}}
 
   '4-changelog-chunks':
@@ -99,23 +99,23 @@ tasks:
     deps: ['2-markdown']
     sources:
       - '{{.MD_PAGES_DIR}}/{{.MARKER_FILE}}'
-      - 01d_process_changelogs.py
+      - src/01d_process_changelogs.py
       - '{{.CHANGELOG_PROMPT}}'
     generates:
       - '{{.CHANGELOG_CHUNKS_FILE}}'
     cmds:
-      - '{{.PYTHON}} 01d_process_changelogs.py'
+      - '{{.PYTHON}} src/01d_process_changelogs.py'
 
   '5-wiki-chunks':
     desc: 'Step 5: Breaks down summarized markdown files into smaller chunks.'
     deps: ['3-markdown-summaries']
     sources:
       - '{{.SUMMARIZED_PAGES_DIR}}/{{.MARKER_FILE}}'
-      - 02_chunk_corpus.py
+      - src/02_chunk_corpus.py
     generates:
       - '{{.WIKI_CHUNKS_FILE}}'
     cmds:
-      - '{{.PYTHON}} 02_chunk_corpus.py'
+      - '{{.PYTHON}} src/02_chunk_corpus.py'
 
   '6-merged-chunks':
     desc: 'Step 6: Combines the wiki and changelog chunks into a single file.'
@@ -123,22 +123,22 @@ tasks:
     sources:
       - '{{.WIKI_CHUNKS_FILE}}'
       - '{{.CHANGELOG_CHUNKS_FILE}}'
-      - 02b_merge_chunks.py
+      - src/02b_merge_chunks.py
     generates:
       - '{{.ALL_CHUNKS_FILE}}'
     cmds:
-      - '{{.PYTHON}} 02b_merge_chunks.py'
+      - '{{.PYTHON}} src/02b_merge_chunks.py'
 
   '7-vector-store':
     desc: 'Step 7: Creates a FAISS vector store from the merged chunks.'
     deps: ['6-merged-chunks']
     sources:
       - '{{.ALL_CHUNKS_FILE}}'
-      - 03_build_vector_store.py
+      - src/03_build_vector_store.py
     generates:
       - '{{.VECTOR_STORE_DIR}}/{{.MARKER_FILE}}'
     cmds:
-      - '{{.PYTHON}} 03_build_vector_store.py'
+      - '{{.PYTHON}} src/03_build_vector_store.py'
       - touch {{.VECTOR_STORE_DIR}}/{{.MARKER_FILE}}
 
   '8-keywords':
@@ -146,26 +146,27 @@ tasks:
     deps: ['7-vector-store']
     sources:
       - '{{.VECTOR_STORE_DIR}}/{{.MARKER_FILE}}'
-      - 04_generate_keywords.py
+      - src/04_generate_keywords.py
     generates:
       - '{{.KEYWORDS_FILE}}'
     cmds:
-      - '{{.PYTHON}} 04_generate_keywords.py'
+      - '{{.PYTHON}} src/04_generate_keywords.py'
 
   '9-keywords-refined':
     desc: 'Step 9: Filters the keyword list to create a domain-specific list.'
     deps: ['8-keywords']
     sources:
       - '{{.KEYWORDS_FILE}}'
-      - 05_refine_keywords.py
+      - src/05_refine_keywords.py
     generates:
       - '{{.REFINED_KEYWORDS_FILE}}'
     cmds:
-      - '{{.PYTHON}} 05_refine_keywords.py'
+      - '{{.PYTHON}} src/05_refine_keywords.py'
 
   # ---------------------------------------------------------------------------
   # --- Clean Tasks
   # ---------------------------------------------------------------------------
+
   clean:
     desc: Removes all generated data, caches, and artifacts.
     deps:

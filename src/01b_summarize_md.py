@@ -4,7 +4,6 @@ import argparse
 import logging
 import tiktoken
 import config
-import re
 from openai import OpenAI, APIError
 from pathlib import Path
 from tqdm import tqdm
@@ -12,33 +11,10 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from typing import List, Optional
 from dataclasses import dataclass, field
 from markdown_it import MarkdownIt
+from logging_config import configure_logging
 
-# --- Logging Configuration ---
-class TqdmLoggingHandler(logging.Handler):
-    def __init__(self, level=logging.NOTSET):
-        super().__init__(level)
-
-    def emit(self, record):
-        try:
-            msg = self.format(record)
-            tqdm.write(msg)
-            self.flush()
-        except (KeyboardInterrupt, SystemExit):
-            raise
-        except Exception:
-            self.handleError(record)
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-    handlers=[
-        logging.FileHandler("console.log"),
-        TqdmLoggingHandler()
-    ]
-)
-
+configure_logging()
 logger = logging.getLogger(__name__)
-# --- End Logging Configuration ---
 
 # --- Configuration ---
 DATA_SOURCE_DIR = Path("x4-foundations-wiki")

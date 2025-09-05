@@ -15,7 +15,7 @@ class TqdmLoggingHandler(logging.Handler):
         except Exception:
             self.handleError(record)
 
-def setup_logging():
+def configure_logging():
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",

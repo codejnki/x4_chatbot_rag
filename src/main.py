@@ -1,16 +1,18 @@
 # main.py
 
+import logging
+from logging_config import configure_logging
+
+
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from logging_config import setup_logging
 from api_routes import router as api_router
 
-# --- Logging Configuration ---
-setup_logging()
-# --- End Logging Configuration ---
+configure_logging()
+logger = logging.getLogger(__name__)
 
-# --- FastAPI Application ---
 app = FastAPI(
     title="X4 RAG API",
     description="An OpenAI-compatible API that uses a local RAG pipeline for X4 Foundations.",
