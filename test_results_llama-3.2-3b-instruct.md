@@ -1,149 +1,107 @@
-User: What are the best ships for mining?
+User: Who were the ancestors of the Argon race?
 
-: According to the context, the best ships for mining in X4 Foundations include the Courier (Mineral), Argon Miner, Small and Medium ships using Container Magnet, Manorina (Gas), and Large ships that allow manual control to mine locally or collect small/medium fragments on ship contact.
+: The ancestors of the Argon race were Terran colonists who were stranded on Earth centuries ago.
 
-User: How do I build a station?
+User: Name one ally and two enemies of the Argon Federation.
 
-: To build a station in X4 Foundations, you need to select a suitable location and equip it with necessary modules such as platforms, elevators, transporters, NPCs for interaction, scanning capabilities, and configure docking bays according to your needs.
+: Based on the provided context, one ally of the Argon Federation is the Holy Order of the Pontifex.
 
-User: What is the plot of the game?
+Two enemies of the Argon Federation mentioned in the context are:
 
-: The main plot of X4 Foundations revolves around the Free Families Conflict, where players are given the option to either support the Zyarth Patriarchy's expansion or aid the Curbs in their attempt to overthrow the existing order and gain control over the Free Families.
+1.  Kha'ak
+2.  Zyarth Patriarchy
 
-User: How do I make money?
+User: Is Spacefuel considered an illegal ware in Argon Federation territory?
 
-: In X4 Foundations, you can earn money by buying crafting materials from traders and selling them for valuable items like medkits. Additionally, you can purchase items from the Trader's Corner on station platforms, negotiate prices using sliders, and confirm transactions to profit. Furthermore, sell ships at designated wharfs or shipyards by right-clicking on them and selecting "Sell ship" after confirming price and transaction.
+: According to the provided context, NO_CLEAR_ANSWER.
 
-User: What are the different factions?
+User: What are the general characteristics of ships manufactured by the Argon Federation?
 
-: There are three main factions mentioned in the context: 
-1. Alliance of the Word
-2. Holy Order of the Pontifex
-3. Godrealm of the Paranid
+: Based on the provided context, it is not possible to determine the general characteristics of all ships manufactured by the Argon Federation, as the context only mentions "average to above-average vessels". However, it does mention specific models such as the Quasar and Cerberus Vanguard, which are variant versions of Antigone Republic ships (except for the Quasar).
 
-User: How do I get a good start in the game?
+User: According to the document, what happens to the new outpost sectors added by the Split Vendetta DLC if the player doesn't intervene?
 
-: You can benefit from utilizing the "New Game" feature in the game, which includes a new option labeled as "Start Game". This feature will provide you with a solid foundation for your journey in X4 Foundations.
+: According to the context provided, without intervention, the new outpost sectors added by the Split Vendetta DLC can potentially fall to the neighboring Zyarth Patriarchy.
 
-User: What are the best weapons?
+User: When was Terraforming added as a new feature?
 
 : NO_CLEAR_ANSWER
 
-User: How do I use the SETA drive?
-
-: To use the SETA drive, you can access it through the docking bay's manual interface.
-
-User: What are the different ship classes?
-
-: In X4 Foundations, there are three primary ship classes: small, medium, and large, with XL-class ships representing a fourth category consisting of specific subtypes such as battleships, builders, carriers, and resuppliers that cater to specialized roles.
-
-User: How do I capture ships?
-
-: To capture ships in X4 Foundations, you can use one of three methods: boarding, claiming an abandoned ship, or destruction.
-
-Boarding requires sufficient Marine crew across participating ships and involves scanning the target, planning, choosing a behaviour, and initiating a 3-stage operation. 
-
-Claiming a bailed ship can be done by either ordering a Marine to claim it from your Spacesuit or by personally claiming an abandoned ship after locating and scanning a signal leak, then docking with the ship.
-
-Destruction is another method of capturing ships, which leaves little of the target behind but provides prestige for the capture.
-
-User: What are the best mods for the game?
+User: In version 4.10, what new feature was added related to game starts?
 
 : NO_CLEAR_ANSWER
 
-User: How do I use the stock market?
+User: What was fixed regarding the Asgard's main weapon in Hotfix 2 for version 4.00?
 
-: According to the context, to use the stock market in X4 Foundations, you typically research a company's financial health, management team, and industry trends before investing. You should also set a budget and decide on a trading strategy, such as day trading or long-term investing. Additionally, you can manually transfer desired wares to your station to control trade offers and pricing.
+: The Asgard's main weapon, specifically the Bolt Repeater and Neutron Gatling, had issues with barrel rotation that were addressed in Hotfix 2 for version 4.00.
 
-User: What are the different trade goods?
+User: According to the 4.20 changelog, which type of ship was "excessively effective" when the player was not present?
 
-: Based on the provided context, I can tell you that there are several types of trade goods in X4 Foundations. However, the exact list and details about each type are not specified in the given context.
+: I don't have enough information to answer that question.
 
-User: How do I find black market traders?
+User: List two improvements made to the Station Editor in version 4.10.
 
-: You can find black market traders by using scan stations' modules or a player-owned Satellite or station within radar range, or by purchasing a faction's Trade Subscription with sufficient rank and cash to access the black market directly.
+: Two improvements made to the Station Editor in version 4.10 of X4 Foundations are:
 
-User: What are the best ways to explore the galaxy?
+1. Module rotation around all axes
+2. Improved visibility of station modules in the Station Build menu.
 
-: According to the provided context, the best way to explore the galaxy is through Navigation, which enables players to traverse through clusters, sectors, and zones to discover new systems and celestial bodies.
+User: What are the two starting requirements to begin the Hatikvah plot?
 
-User: How do I manage my fleet?
+: To begin the Hatikvah plot, you must have neutral relations with the Hatikvah Free League and be located within 2 "Jumps" of Hatikvah's Choice.
 
-: To manage your fleet in X4 Foundations, you can assign ships to a fleet by right-clicking on the new leader and selecting the ASSIGNMENT option from the context menu. This will set the behavior for defending this leader, allowing you to move all ships into the hierarchy of the leader. A plus symbol will appear in front of the leader ship in the OBJECT LIST and PROPERTY OWNED menus, indicating their assignment to the fleet.
+User: During the "Meeting Dal" stage of the plot, what must the player do at a Scale Plate station?
 
-User: What are the different station modules?
+: Based on the provided context, you must approach the Scale Plate station and initiate conversation with the Scale Plate Lieutenant during the "Meeting Dal" stage of the plot.
 
-: According to the X4 Foundations wiki, there are 8 main categories of station modules: 
+User: To complete the "Station Defences" mission, how many lasertowers are required and where can they be purchased?
 
-1. Build
-2. Defence
-3. Dock
-4. Habitation
-5. Other
-6. Production
-7. Storage
-8. Venture
+: Five laser towers are required to complete the "Station Defences" mission in X4 Foundations. They can be purchased from various locations including wharves, shipyards, and equipment docks.
 
-User: How do I use the research and development system?
+User: What happens to the Hatikvah freighter during the "Breakdown" phase of the plot, and can the player prevent it?
 
-: To use the Research menu in the Research and Development system, you must have a Player Headquarters and select a technology to start research on once the necessary wares are available at your research facility, allowing upgrades to be completed within the specified time.
+: The context does not provide information about what specifically happens to the Hatikvah freighter during the "Breakdown" phase of the plot. However, it is stated that there is no way for the player to prevent this event from occurring.
 
-User: What are the different story missions?
+User: Besides mission access, name one tangible reward received for completing the Hatikvah plot.
 
-: I do not have enough information to answer your question about the specific details of story missions in X4 Foundations.
+: One tangible reward besides mission access is wealth.
 
-User: How do I get a player headquarters?
-
-: To obtain a player headquarters, you must not start the game as "Terran Cadet", "Project Genesis", or "The Accomplished Scientist" and your Kingdom End DLC must be inactive at the beginning of the plot. Once these prerequisites are met, you can dock at your headquarters in Heretic's End, chat with Boso Ta to obtain ownership, and unlock research upgrades and perks for your empire.
-
-User: When was terraforming added to X4
-
-: Terraforming was added to X4 Foundations with the release of the Cradle of Humanity DLC as part of the 4.0 update and specifically through the "Introducing Terraforming" update.
-
-User: What are the different types of drones and what are their primary functions?
-
-: In X4 Foundations, Drones can be categorized based on their mothership type as follows:
-
-1.  **Station-based Drones**: These are deployed from space stations.
-2.  **Ship-based Drones**: These are launched from M, L, or XL ships.
-
-Drones from these categories perform the following primary functions:
-*   Cargo transport
-*   Construction
-*   Defense
-*   Resource gathering
-*   Mineral extraction
-*   Equipment repair
-*   Planetary environment alteration
-
-User: How do I use the research menu to unlock the terraforming project and what are the initial requirements?
-
-: To unlock the terraforming project using the research menu, you must first click on the new icon at the top of the screen, which resembles a planet with a gear. Then select a terraforming project from the available options. The initial requirements for unlocking this project include researching high mass teleportation and speaking to Boso Ta afterwards.
-
-User: What are the differences between the Split and Paranid factions in terms of ship design and combat philosophy?
-
-: The main differences between the Split and Paranid factions lie in their ship design and combat philosophy, primarily due to their distinct cultures and values. The Split faction is known for its emphasis on speed and agility, often employing sleek, high-performance vessels that excel in dogfighting and rapid response missions. In contrast, the Paranid focus on technological advancements and strategic thinking, utilizing more heavily armored ships with advanced defensive capabilities to outmaneuver their opponents.
-
-User: Explain the purpose of the Long Range Scan (LRS) and how its mechanic has changed in recent updates.
-
-: The Long Range Scan (LRS) is a feature that allows players to gather information about nearby ships, stations, and other objects in the game world. Its resolution has increased with recent updates, providing better details on the surrounding environment. In Mk1, it simply marked found objects on the map; however, Mk2 versions have enhanced this functionality by color-coding identified small objects, such as wrecks, asteroid locations of explosive asteroids, rare lockboxes, anomalies, and data vaults, to distinguish each type with distinct rings.
-
-User: What is the plot of the latest Star Wars movie?
+User: What is the explosive damage per shot of a Starburst Missile?
 
 : NO_CLEAR_ANSWER
 
-User: What is the best way to train a dog?
+User: According to the tactical overview, what is the primary distinguishing feature of the Starburst Missile compared to other heavy missiles?
 
-: The provided context does not specifically state the "best" way to train a dog, but it mentions that positive reinforcement training is considered one of the most effective methods.
+: The primary distinguishing feature of the Starburst Missile is its superior maneuverability, which makes it suitable for head-on engagements.
 
-User: How do I bake a cake?
+User: Which factions sell the Starburst Missile?
 
-: NO_CLEAR_ANSWER
+: The ZYA FRF CUB faction sells the Starburst Missile.
 
-User: How does a combustion engine work?
-
-: A combustion engine works by using a combination of air, fuel, and ignition to generate power through internal combustion. This process involves drawing air and fuel into cylinders, mixing them together, igniting them inside the cylinder, producing a small explosion that pushes a piston down. The motion from the pistons is then transferred to a crankshaft, which converts the up-and-down motion into rotary energy.
-
-User: Who is the main character in the game Elden Ring?
+User: How many Missile Components are required to build a Starburst Missile using the Universal Build Method?
 
 : NO_CLEAR_ANSWER
+
+User: Does the Starburst Missile's actual in-game performance match its in-game description as the most powerful warhead?
+
+: The Starburst Missile does not entirely match its in-game description due to a reduced effective range and rate of fire caused by its lock-on mechanic, limiting its suitability for head-on engagements against larger ships.
+
+User: What is the hull strength of the Teladi Phoenix Vanguard?
+
+: I do not have enough information to answer the question.
+
+User: How many large turrets ("Turrets L") does the Split Rattlesnake have?
+
+: The Split Rattlesnake has 2 large turrets, referred to as "Turrets L".
+
+User: What is the ship type of the Paranid Odysseus Sentinel?
+
+: I do not have enough information to answer the question.
+
+User: How much liquid storage ("Storage Liquid") does an Argon Magnetar (Gas) Vanguard have?
+
+: Unfortunately, I do not have enough information to answer your question.
+
+User: Which faction builds the Colossus Sentinel, and what is its crew capacity?
+
+: The Colossus Sentinel is built by the Antigone Republic, and it has a crew capacity of 16.

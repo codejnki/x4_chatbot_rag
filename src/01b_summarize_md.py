@@ -58,12 +58,14 @@ def is_changelog_file(file_path: Path, md_content: str) -> bool:
 def strip_until_newline(text: str) -> str:
     return re.sub(r'^.*\n', '', text, count=1)
 
+# src/01b_summarize_md.py
+
 def call_summarizer(content: str, task: str, context_path: str) -> str:
     try:
         if not content.strip():
             return ""
         if len(content.split()) < 10:
-             return strip_until_newline(content.strip())
+             return f"Context: {context_path}\n\n{content.strip()}"
 
         formatted_prompt = SUMMARIZER_PROMPT_TEMPLATE.format(task=task, content=content, context_path=context_path)
         prompt_tokens = len(TOKENIZER.encode(formatted_prompt))

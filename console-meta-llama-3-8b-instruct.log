@@ -1,0 +1,627 @@
+2025-09-05 17:07:38,778 - INFO - rag_chain - Loaded 633 refined keywords.
+2025-09-05 17:07:42,005 - INFO - sentence_transformers.SentenceTransformer - Use pytorch device_name: cpu
+2025-09-05 17:07:42,005 - INFO - sentence_transformers.SentenceTransformer - Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-09-05 17:07:43,965 - INFO - faiss.loader - Loading faiss with AVX512 support.
+2025-09-05 17:07:43,965 - INFO - faiss.loader - Could not load library with AVX512 support due to:
+ModuleNotFoundError("No module named 'faiss.swigfaiss_avx512'")
+2025-09-05 17:07:43,965 - INFO - faiss.loader - Loading faiss with AVX2 support.
+2025-09-05 17:07:43,976 - INFO - faiss.loader - Successfully loaded faiss with AVX2 support.
+2025-09-05 17:07:45,551 - INFO - sentence_transformers.cross_encoder.CrossEncoder - Use pytorch device: cpu
+2025-09-05 17:07:46,274 - INFO - uvicorn.error - Started server process [163600]
+2025-09-05 17:07:46,275 - INFO - uvicorn.error - Waiting for application startup.
+2025-09-05 17:07:46,275 - INFO - uvicorn.error - Application startup complete.
+2025-09-05 17:07:46,275 - INFO - uvicorn.error - Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+2025-09-05 17:07:58,865 - INFO - uvicorn.access - 127.0.0.1:52689 - "OPTIONS /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:07:58,866 - INFO - uvicorn.access - 127.0.0.1:52690 - "OPTIONS /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:07:58,869 - INFO - rag_chain - Fallback: No keywords found or researcher failed. Using simple semantic retrieval with researcher pass.
+2025-09-05 17:07:58,879 - INFO - uvicorn.access - 127.0.0.1:52690 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:07:58,881 - INFO - rag_chain - Found keywords: ['Argon']. Retrieving, re-ranking, and researching...
+2025-09-05 17:07:59,755 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:07:59,816 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:08:00,617 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:00,624 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:08:00,694 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:00,695 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:08:00,927 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:00,928 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:08:01,027 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:01,028 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:08:01,394 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:01,396 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:08:01,503 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:01,505 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:08:01,781 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:01,782 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:08:01,887 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:01,889 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:08:02,258 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:02,260 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:08:02,358 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:02,359 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:08:02,704 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:02,705 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:08:02,816 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:02,817 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:08:03,184 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:03,185 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:08:03,284 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:03,285 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:08:03,679 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:03,681 - INFO - researcher - --- Final Researcher synthesized context: ---
+The ancestors of the Argon race were Terran colonists who were stranded on distant planets for centuries during the Terraformer wars, ultimately leading to their development into a thriving civilization.
+--------------------
+2025-09-05 17:08:03,688 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:03,734 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:03,735 - INFO - researcher - --- Final Researcher synthesized context: ---
+Argon Federation
+--------------------
+2025-09-05 17:08:03,741 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:03,982 - INFO - uvicorn.access - 127.0.0.1:52690 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:08:03,984 - INFO - rag_chain - Found keywords: ['Argon Federation', 'Argon', 'The Federation']. Retrieving, re-ranking, and researching...
+2025-09-05 17:08:04,026 - INFO - uvicorn.access - 127.0.0.1:52689 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:08:04,569 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:08:04,984 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:04,986 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:08:05,293 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:05,294 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:08:05,924 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:05,925 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:08:06,075 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:06,076 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:08:06,493 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:06,494 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:08:06,642 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:06,644 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:08:07,043 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:07,044 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:08:07,435 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:07,437 - INFO - researcher - --- Final Researcher synthesized context: ---
+Antigone Republic is an ally of the Argon Federation, while the Holy Order of the Pontifex and the Kha'ak are two of its enemies.
+--------------------
+2025-09-05 17:08:07,442 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:07,981 - INFO - uvicorn.access - 127.0.0.1:52690 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:08:07,982 - INFO - rag_chain - Found keywords: ['Argon Federation', 'Spacefuel', 'Argon']. Retrieving, re-ranking, and researching...
+2025-09-05 17:08:08,708 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:08:08,933 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:08,934 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:08:09,101 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:09,103 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:08:09,274 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:09,275 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:08:09,483 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:09,484 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:08:10,086 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:10,087 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:08:10,690 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:10,692 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:08:10,839 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:10,840 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:08:11,016 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:11,018 - INFO - researcher - --- Final Researcher synthesized context: ---
+Spacefuel is considered an illegal ware in Argon Federation territory.
+--------------------
+2025-09-05 17:08:11,022 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:11,296 - INFO - uvicorn.access - 127.0.0.1:52690 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:08:11,297 - INFO - rag_chain - Found keywords: ['Argon Federation', 'Argon', 'The Federation', 'ships']. Retrieving, re-ranking, and researching...
+2025-09-05 17:08:12,513 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:08:13,217 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:13,218 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:08:13,612 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:13,613 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:08:14,237 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:14,238 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:08:14,889 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:14,891 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:08:15,435 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:15,436 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:08:15,903 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:15,904 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:08:16,234 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:16,235 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:08:16,988 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:16,989 - INFO - researcher - --- Final Researcher synthesized context: ---
+Here is the synthesized answer:
+
+The general characteristics of ships manufactured by the Argon Federation include average to above-average vessels, including popular models such as the Quasar and Cerberus Vanguard. Notably, all ships manufactured by the federation are vanguard variants of those produced by the Antigone Republic, with faster speed but weaker hulls.
+--------------------
+2025-09-05 17:08:16,993 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:17,435 - INFO - uvicorn.access - 127.0.0.1:52690 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:08:17,437 - INFO - rag_chain - Found keywords: ['Split']. Retrieving, re-ranking, and researching...
+2025-09-05 17:08:18,097 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:08:18,435 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:18,436 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:08:18,800 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:18,801 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:08:19,167 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:19,169 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:08:19,491 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:19,493 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:08:19,765 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:19,767 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:08:20,073 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:20,074 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:08:20,331 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:20,332 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:08:20,649 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:20,651 - INFO - researcher - --- Final Researcher synthesized context: ---
+The new outpost sectors added by the Split Vendetta DLC will fall to the neighboring Zyarth Patriarchy if the player doesn't intervene.
+--------------------
+2025-09-05 17:08:20,655 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:21,051 - INFO - uvicorn.access - 127.0.0.1:52690 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:08:21,053 - INFO - rag_chain - Found keywords: ['Terraforming']. Retrieving, re-ranking, and researching...
+2025-09-05 17:08:22,297 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:08:22,670 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:22,671 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:08:22,682 - INFO - researcher - Content for recursive summarization is too large. Splitting text in half.
+2025-09-05 17:08:22,687 - INFO - researcher - Content for recursive summarization is too large. Splitting text in half.
+2025-09-05 17:08:22,689 - INFO - researcher - Content for recursive summarization is too large. Splitting text in half.
+2025-09-05 17:08:23,706 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:24,430 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:24,831 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:24,835 - INFO - researcher - Content for recursive summarization is too large. Splitting text in half.
+2025-09-05 17:08:25,551 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:26,306 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:26,370 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:26,782 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:26,789 - INFO - researcher - Content for recursive summarization is too large. Splitting text in half.
+2025-09-05 17:08:26,791 - INFO - researcher - Content for recursive summarization is too large. Splitting text in half.
+2025-09-05 17:08:27,533 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:28,228 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:28,292 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:28,295 - INFO - researcher - Content for recursive summarization is too large. Splitting text in half.
+2025-09-05 17:08:28,990 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:29,725 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:29,790 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:29,845 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:30,252 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:30,253 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:08:30,259 - INFO - researcher - Content for recursive summarization is too large. Splitting text in half.
+2025-09-05 17:08:30,262 - INFO - researcher - Content for recursive summarization is too large. Splitting text in half.
+2025-09-05 17:08:31,018 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:31,786 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:31,849 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:31,854 - INFO - researcher - Content for recursive summarization is too large. Splitting text in half.
+2025-09-05 17:08:32,624 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:33,391 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:33,455 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:33,510 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:33,511 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:08:33,840 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:33,841 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:08:34,145 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:34,146 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:08:34,630 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:34,632 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:08:34,727 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:34,728 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:08:35,098 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:35,100 - INFO - researcher - --- Final Researcher synthesized context: ---
+Terraforming was added as a new feature in version 4.00 of X4 Foundations, which was released on March 16th, 2021.
+--------------------
+2025-09-05 17:08:35,104 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:35,538 - INFO - uvicorn.access - 127.0.0.1:52706 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:08:35,540 - INFO - rag_chain - Found keywords: ['New Game']. Retrieving, re-ranking, and researching...
+2025-09-05 17:08:36,163 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:08:36,341 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:36,342 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:08:36,440 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:36,442 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:08:36,537 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:36,539 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:08:36,631 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:36,632 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:08:36,725 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:36,727 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:08:36,822 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:36,823 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:08:36,912 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:36,913 - INFO - researcher - --- Final Researcher synthesized context: ---
+Fixed relations in Terran game start.
+--------------------
+2025-09-05 17:08:36,918 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:37,404 - INFO - uvicorn.access - 127.0.0.1:52706 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:08:37,406 - INFO - rag_chain - Found keywords: ['Asgard']. Retrieving, re-ranking, and researching...
+2025-09-05 17:08:38,065 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:08:38,401 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:38,403 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:08:38,557 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:38,558 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:08:38,655 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:38,657 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:08:38,750 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:38,751 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:08:38,843 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:38,844 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:08:38,941 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:38,942 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:08:39,037 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:39,038 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:08:39,326 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:39,327 - INFO - researcher - --- Final Researcher synthesized context: ---
+The main weapon on Asgard was fixed in Hotfix 2 for version 4.00, as it was previously being destroyed.
+--------------------
+2025-09-05 17:08:39,331 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:39,697 - INFO - uvicorn.access - 127.0.0.1:52706 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:08:39,699 - INFO - rag_chain - Found keywords: ['Type', 'Ship']. Retrieving, re-ranking, and researching...
+2025-09-05 17:08:40,908 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:08:41,143 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:41,144 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:08:41,240 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:41,241 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:08:41,328 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:41,329 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:08:41,633 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:41,634 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:08:42,054 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:42,056 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:08:42,145 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:42,147 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:08:42,241 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:42,243 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:08:42,314 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:42,315 - INFO - researcher - --- Final Researcher synthesized context: ---
+NO_CLEAR_ANSWER
+--------------------
+2025-09-05 17:08:42,320 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:42,637 - INFO - uvicorn.access - 127.0.0.1:52706 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:08:42,638 - INFO - rag_chain - Found keywords: ['Station Editor']. Retrieving, re-ranking, and researching...
+2025-09-05 17:08:43,289 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:08:43,719 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:43,721 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:08:44,070 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:44,071 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:08:44,460 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:44,462 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:08:44,827 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:44,828 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:08:45,250 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:45,251 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:08:45,686 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:45,688 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:08:46,194 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:46,195 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:08:46,296 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:46,297 - INFO - researcher - --- Final Researcher synthesized context: ---
+NO_CLEAR_ANSWER
+--------------------
+2025-09-05 17:08:46,302 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:47,013 - INFO - uvicorn.access - 127.0.0.1:52706 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:08:47,014 - INFO - rag_chain - Found keywords: ['Hatikvah plot', 'Hatikvah Plot', 'Hatikvah']. Retrieving, re-ranking, and researching...
+2025-09-05 17:08:47,617 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:08:47,984 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:47,985 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:08:48,448 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:48,449 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:08:48,885 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:48,885 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:08:49,102 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:49,103 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:08:49,523 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:49,524 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:08:49,909 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:49,911 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:08:50,197 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:50,199 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:08:50,653 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:50,655 - INFO - researcher - --- Final Researcher synthesized context: ---
+Neutral relations with the Hatikvah Free League and being located within 2 "jumps" of Hatikvah's Choice are the two starting requirements to begin the Hatikvah plot.
+--------------------
+2025-09-05 17:08:50,660 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:51,211 - INFO - uvicorn.access - 127.0.0.1:52706 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:08:51,213 - INFO - rag_chain - Found keywords: ['The Meeting', 'Dal', 'Scale Plate station', 'Scale Plate Dal', 'Scale Plate']. Retrieving, re-ranking, and researching...
+2025-09-05 17:08:52,408 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:08:52,950 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:52,952 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:08:53,802 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:53,803 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:08:54,308 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:54,309 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:08:54,602 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:54,603 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:08:54,977 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:54,977 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:08:55,314 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:55,316 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:08:55,687 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:55,688 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:08:56,454 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:56,454 - INFO - researcher - --- Final Researcher synthesized context: ---
+To progress during the "Meeting Dal" stage of the plot, the player must approach a Scale Plate station, identify data leaks using short-range scan mode, decrypt the data stream, and then escape before the Scale Plate forces arrive in pursuit. Alternatively, they can bring lodestone as a gift to appease the Scale Plate Lieutenant and facilitate negotiations at the station.
+--------------------
+2025-09-05 17:08:56,459 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:57,309 - INFO - uvicorn.access - 127.0.0.1:52706 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:08:57,312 - INFO - rag_chain - Found keywords: ['Lasertowers', 'lasertowers']. Retrieving, re-ranking, and researching...
+2025-09-05 17:08:58,062 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:08:58,595 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:58,596 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:08:59,110 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:59,112 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:08:59,589 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:08:59,590 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:09:00,147 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:00,148 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:09:00,229 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:00,231 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:09:00,472 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:00,473 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:09:00,569 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:00,570 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:09:01,484 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:01,485 - INFO - researcher - --- Final Researcher synthesized context: ---
+I'm a data analysis and synthesis engine, and I'll follow the instructions to provide a concise and factual paragraph that directly answers the user's question.
+
+After reviewing the provided text snippets, here is the synthesized answer:
+
+Five lasertowers are required to complete the "Station Defences" mission, which can be purchased from wharves, shipyards, or equipment docks, with mk1 variants costing around 9,500Cr each.
+--------------------
+2025-09-05 17:09:01,490 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:01,991 - INFO - uvicorn.access - 127.0.0.1:52706 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:09:01,993 - INFO - rag_chain - Found keywords: ['Hatikvah plot', 'Freighter', 'Hatikvah Plot', 'Hatikvah Breakdown', 'Hatikvah']. Retrieving, re-ranking, and researching...
+2025-09-05 17:09:02,874 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:09:03,254 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:03,255 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:09:03,502 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:03,504 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:09:03,754 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:03,755 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:09:04,088 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:04,089 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:09:04,492 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:04,494 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:09:05,408 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:05,409 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:09:05,734 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:05,735 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:09:06,085 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:06,087 - INFO - researcher - --- Final Researcher synthesized context: ---
+The Hatikvah freighter is destroyed during the "Breakdown" phase of the plot, and this event cannot be prevented by the player.
+--------------------
+2025-09-05 17:09:06,092 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:06,515 - INFO - uvicorn.access - 127.0.0.1:52706 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:09:06,517 - INFO - rag_chain - Found keywords: ['Hatikvah plot', 'Hatikvah Plot', 'Hatikvah']. Retrieving, re-ranking, and researching...
+2025-09-05 17:09:07,221 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:09:07,549 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:07,550 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:09:07,869 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:07,871 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:09:08,197 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:08,198 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:09:08,485 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:08,487 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:09:08,805 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:08,807 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:09:09,119 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:09,121 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:09:09,353 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:09,354 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:09:09,659 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:09,660 - INFO - researcher - --- Final Researcher synthesized context: ---
+Medical supplies worth approximately 10,000Cr are a tangible reward received for completing the Hatikvah plot besides mission access.
+--------------------
+2025-09-05 17:09:09,665 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:10,035 - INFO - uvicorn.access - 127.0.0.1:52706 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:09:10,036 - INFO - rag_chain - Found keywords: ['Starburst', 'Starburst Missile']. Retrieving, re-ranking, and researching...
+2025-09-05 17:09:11,137 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:09:11,372 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:11,373 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:09:11,604 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:11,606 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:09:11,888 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:11,889 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:09:12,193 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:12,195 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:09:12,647 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:12,648 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:09:12,868 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:12,869 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:09:13,446 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:13,447 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:09:13,528 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:13,530 - INFO - researcher - --- Final Researcher synthesized context: ---
+3800.
+--------------------
+2025-09-05 17:09:13,533 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:14,215 - INFO - uvicorn.access - 127.0.0.1:52706 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:09:14,217 - INFO - rag_chain - Found keywords: ['Starburst', 'Starburst Missile']. Retrieving, re-ranking, and researching...
+2025-09-05 17:09:15,324 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:09:15,694 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:15,695 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:09:16,014 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:16,015 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:09:16,410 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:16,411 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:09:16,853 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:16,854 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:09:17,285 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:17,287 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:09:17,616 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:17,617 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:09:18,057 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:18,058 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:09:18,481 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:18,482 - INFO - researcher - --- Final Researcher synthesized context: ---
+The primary distinguishing feature of the Starburst Missile compared to other heavy missiles is its superior maneuverability, making it suitable for head-on engagements and moderately effective against turrets on larger ships.
+--------------------
+2025-09-05 17:09:18,487 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:18,804 - INFO - uvicorn.access - 127.0.0.1:52706 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:09:18,805 - INFO - rag_chain - Found keywords: ['Starburst', 'Starburst Missile']. Retrieving, re-ranking, and researching...
+2025-09-05 17:09:19,873 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:09:20,057 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:20,059 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:09:20,232 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:20,233 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:09:20,378 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:20,380 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:09:20,540 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:20,541 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:09:21,031 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:21,032 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:09:21,117 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:21,119 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:09:21,282 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:21,283 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:09:21,570 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:21,571 - INFO - researcher - --- Final Researcher synthesized context: ---
+Here is the synthesized answer:
+
+The factions that sell the Starburst Missile are ZYA FRF CUB and the Split faction.
+--------------------
+2025-09-05 17:09:21,576 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:21,887 - INFO - uvicorn.access - 127.0.0.1:52706 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:09:21,889 - INFO - rag_chain - Found keywords: ['Universal Build Method', 'Missile Components', 'Starburst', 'Starburst Missile']. Retrieving, re-ranking, and researching...
+2025-09-05 17:09:22,975 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:09:23,294 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:23,295 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:09:23,602 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:23,603 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:09:23,908 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:23,910 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:09:24,200 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:24,201 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:09:24,479 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:24,480 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:09:24,566 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:24,566 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:09:24,652 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:24,652 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:09:24,867 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:24,868 - INFO - researcher - --- Final Researcher synthesized context: ---
+Twenty-nine missile components are required to build a Starburst Missile using the Universal Build Method.
+--------------------
+2025-09-05 17:09:24,872 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:25,168 - INFO - uvicorn.access - 127.0.0.1:52706 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:09:25,170 - INFO - rag_chain - Found keywords: ['Starburst', 'Starburst Missile']. Retrieving, re-ranking, and researching...
+2025-09-05 17:09:26,262 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:09:26,837 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:26,839 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:09:27,173 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:27,175 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:09:27,734 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:27,735 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:09:28,509 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:28,510 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:09:28,763 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:28,764 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:09:29,135 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:29,137 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:09:29,644 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:29,644 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:09:30,226 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:30,227 - INFO - researcher - --- Final Researcher synthesized context: ---
+The Starburst Missile's actual in-game performance does not match its in-game description as the most powerful warhead, as it only offers marginally more damage than the standard Heavy Guided Missiles and has a longer reload time, resulting in lower overall DPS.
+--------------------
+2025-09-05 17:09:30,231 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:30,600 - INFO - uvicorn.access - 127.0.0.1:52706 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:09:30,603 - INFO - rag_chain - Found keywords: ['Phoenix Vanguard', 'Hull', 'Teladi', 'Phoenix']. Retrieving, re-ranking, and researching...
+2025-09-05 17:09:31,857 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:09:32,093 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:32,094 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:09:32,300 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:32,300 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:09:32,381 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:32,383 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:09:32,575 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:32,576 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:09:32,770 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:32,771 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:09:33,256 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:33,257 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:09:33,451 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:33,452 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:09:33,531 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:33,532 - INFO - researcher - --- Final Researcher synthesized context: ---
+NO_CLEAR_ANSWER
+--------------------
+2025-09-05 17:09:33,537 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:33,969 - INFO - uvicorn.access - 127.0.0.1:52706 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:09:33,972 - INFO - rag_chain - Found keywords: ['Split', 'Rattlesnake', 'Turrets L']. Retrieving, re-ranking, and researching...
+2025-09-05 17:09:35,183 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:09:35,302 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:35,303 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:09:35,484 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:35,485 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:09:35,663 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:35,664 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:09:35,740 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:35,742 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:09:35,950 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:35,951 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:09:36,182 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:36,183 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:09:36,424 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:36,425 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:09:36,478 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:36,480 - INFO - researcher - --- Final Researcher synthesized context: ---
+One.
+--------------------
+2025-09-05 17:09:36,484 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:36,989 - INFO - uvicorn.access - 127.0.0.1:52706 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:09:36,991 - INFO - rag_chain - Found keywords: ['Paranid', 'Odysseus Sentinel', 'Type', 'Ship']. Retrieving, re-ranking, and researching...
+2025-09-05 17:09:37,757 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:09:38,031 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:38,032 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:09:38,265 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:38,267 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:09:38,485 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:38,486 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:09:38,708 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:38,708 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:09:38,933 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:38,934 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:09:39,159 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:39,160 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:09:39,379 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:39,381 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:09:39,462 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:39,463 - INFO - researcher - --- Final Researcher synthesized context: ---
+NO_CLEAR_ANSWER
+--------------------
+2025-09-05 17:09:39,468 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:39,987 - INFO - uvicorn.access - 127.0.0.1:52706 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:09:39,989 - INFO - rag_chain - Found keywords: ['Gas', 'Argon', 'Magnetar (Gas) Vanguard']. Retrieving, re-ranking, and researching...
+2025-09-05 17:09:40,720 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:09:41,013 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:41,014 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:09:41,084 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:41,085 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:09:41,174 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:41,175 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:09:41,411 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:41,412 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:09:41,627 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:41,628 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:09:41,973 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:41,974 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:09:42,045 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:42,047 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:09:42,123 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:42,124 - INFO - researcher - --- Final Researcher synthesized context: ---
+42,000.
+--------------------
+2025-09-05 17:09:42,128 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:42,575 - INFO - uvicorn.access - 127.0.0.1:52706 - "POST /v1/chat/completions HTTP/1.1" 200
+2025-09-05 17:09:42,577 - INFO - rag_chain - Found keywords: ['Colossus Sentinel', 'Crew', 'Faction']. Retrieving, re-ranking, and researching...
+2025-09-05 17:09:43,759 - INFO - researcher - --- Running Researcher on Document 1/7 ---
+2025-09-05 17:09:44,055 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:44,056 - INFO - researcher - --- Running Researcher on Document 2/7 ---
+2025-09-05 17:09:44,306 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:44,308 - INFO - researcher - --- Running Researcher on Document 3/7 ---
+2025-09-05 17:09:44,559 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:44,560 - INFO - researcher - --- Running Researcher on Document 4/7 ---
+2025-09-05 17:09:44,853 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:44,854 - INFO - researcher - --- Running Researcher on Document 5/7 ---
+2025-09-05 17:09:45,130 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:45,131 - INFO - researcher - --- Running Researcher on Document 6/7 ---
+2025-09-05 17:09:45,407 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:45,408 - INFO - researcher - --- Running Researcher on Document 7/7 ---
+2025-09-05 17:09:45,738 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:45,739 - INFO - researcher - --- Consolidating multiple researcher summaries ---
+2025-09-05 17:09:45,977 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:09:45,977 - INFO - researcher - --- Final Researcher synthesized context: ---
+The Antigone Republic builds the Colossus Sentinel, with a crew capacity of 103.
+--------------------
+2025-09-05 17:09:45,981 - INFO - httpx - HTTP Request: POST http://localhost:1234/v1/chat/completions "HTTP/1.1 200 OK"
+2025-09-05 17:15:21,925 - INFO - uvicorn.error - Shutting down
+2025-09-05 17:15:22,034 - INFO - uvicorn.error - Waiting for application shutdown.
+2025-09-05 17:15:22,034 - INFO - uvicorn.error - Application shutdown complete.
+2025-09-05 17:15:22,034 - INFO - uvicorn.error - Finished server process [163600]
