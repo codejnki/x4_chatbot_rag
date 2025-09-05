@@ -12,7 +12,9 @@
             "program": "${file}",
             "console": "integratedTerminal",
             // "args": "${command:pickArgs}"
-            "args": ["ff/d0/9115b4a180b0496e8aaa54b445e2.html"]
+            "args": [
+                "ff/93/3ebecae6e52616609996e4aa8e23.md",
+            ]
         }
     ]
 }
