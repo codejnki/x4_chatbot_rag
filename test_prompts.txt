@@ -1,59 +1,49 @@
-What are the best ships for mining?
+Who were the ancestors of the Argon race?
 ----
-How do I build a station?
+Name one ally and two enemies of the Argon Federation.
 ----
-What is the plot of the game?
+Is Spacefuel considered an illegal ware in Argon Federation territory?
 ----
-How do I make money?
+What are the general characteristics of ships manufactured by the Argon Federation?
 ----
-What are the different factions?
+According to the document, what happens to the new outpost sectors added by the Split Vendetta DLC if the player doesn't intervene?
 ----
-How do I get a good start in the game?
+When was Terraforming added as a new feature?
 ----
-What are the best weapons?
+In version 4.10, what new feature was added related to game starts?
 ----
-How do I use the SETA drive?
+What was fixed regarding the Asgard's main weapon in Hotfix 2 for version 4.00?
 ----
-What are the different ship classes?
+According to the 4.20 changelog, which type of ship was "excessively effective" when the player was not present?
 ----
-How do I capture ships?
+List two improvements made to the Station Editor in version 4.10.
 ----
-What are the best mods for the game?
+What are the two starting requirements to begin the Hatikvah plot?
 ----
-How do I use the stock market?
+During the "Meeting Dal" stage of the plot, what must the player do at a Scale Plate station?
 ----
-What are the different trade goods?
+To complete the "Station Defences" mission, how many lasertowers are required and where can they be purchased?
 ----
-How do I find black market traders?
+What happens to the Hatikvah freighter during the "Breakdown" phase of the plot, and can the player prevent it?
 ----
-What are the best ways to explore the galaxy?
+Besides mission access, name one tangible reward received for completing the Hatikvah plot.
 ----
-How do I manage my fleet?
+What is the explosive damage per shot of a Starburst Missile?
 ----
-What are the different station modules?
+According to the tactical overview, what is the primary distinguishing feature of the Starburst Missile compared to other heavy missiles?
 ----
-How do I use the research and development system?
+Which factions sell the Starburst Missile?
 ----
-What are the different story missions?
+How many Missile Components are required to build a Starburst Missile using the Universal Build Method?
 ----
-How do I get a player headquarters?
+Does the Starburst Missile's actual in-game performance match its in-game description as the most powerful warhead?
 ----
-When was terraforming added to X4
+What is the hull strength of the Teladi Phoenix Vanguard?
 ----
-What are the different types of drones and what are their primary functions?
+How many large turrets ("Turrets L") does the Split Rattlesnake have?
 ----
-How do I use the research menu to unlock the terraforming project and what are the initial requirements?
+What is the ship type of the Paranid Odysseus Sentinel?
 ----
-What are the differences between the Split and Paranid factions in terms of ship design and combat philosophy?
+How much liquid storage ("Storage Liquid") does an Argon Magnetar (Gas) Vanguard have?
 ----
-Explain the purpose of the Long Range Scan (LRS) and how its mechanic has changed in recent updates.
-----
-What is the plot of the latest Star Wars movie?
-----
-What is the best way to train a dog?
-----
-How do I bake a cake?
-----
-How does a combustion engine work?
-----
-Who is the main character in the game Elden Ring?
+Which faction builds the Colossus Sentinel, and what is its crew capacity?
