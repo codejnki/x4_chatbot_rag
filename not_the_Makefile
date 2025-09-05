@@ -39,7 +39,6 @@ UNZIP_TIMESTAMP         := $(SANITIZED_DIR)/.unzipped
 MARKDOWN_TIMESTAMP      := $(MD_PAGES_DIR)/.processed
 SUMMARIES_TIMESTAMP     := $(SUMMARIZED_PAGES_DIR)/.processed
 VECTOR_STORE_TIMESTAMP  := $(VECTOR_STORE_DIR)/.processed
-KEYWORDS_TIMESTAMP      := $(KEYWORDS_CACHE_DIR)/.processed
 
 # --- Phony Targets ---
 .PHONY: all data markdown markdown-summaries changelog-chunks wiki-chunks merged-chunks vector-store keywords keywords-refined clean-all clean-data clean-markdown clean-markdown-summaries clean-changelog-chunks clean-wiki-chunks clean-merged-chunks clean-vector-store clean-keywords clean-keywords-refined run help
@@ -65,13 +64,13 @@ $(REFINED_KEYWORDS_FILE): $(KEYWORDS_FILE) 05_refine_keywords.py
 	@$(PYTHON) 05_refine_keywords.py
 
 # 8. Generate Keywords
-# Extracts keywords from all chunks using an LLM.
-keywords: $(KEYWORDS_TIMESTAMP)
+# Connects the friendly 'keywords' target to the actual file it produces.
+keywords: $(KEYWORDS_FILE)
 
-$(KEYWORDS_TIMESTAMP): $(VECTOR_STORE_TIMESTAMP) 04_generate_keywords.py
+# The rule to build the actual keyword file.
+$(KEYWORDS_FILE): $(VECTOR_STORE_TIMESTAMP) 04_generate_keywords.py
 	@echo "--> Generating keywords from chunks (this may take a long time)..."
 	@$(PYTHON) 04_generate_keywords.py
-	@touch $(KEYWORDS_TIMESTAMP)
 
 # 7. Build Vector Store
 # Creates a FAISS vector store from the merged chunks.

@@ -3,6 +3,7 @@
 import argparse
 import logging
 import tiktoken
+import config
 from openai import OpenAI, APIError
 from pathlib import Path
 from tqdm import tqdm
@@ -42,14 +43,13 @@ MD_PAGES_DIR = Path(DATA_SOURCE_DIR, "pages_md")
 SUMMARIZED_PAGES_DIR = Path(DATA_SOURCE_DIR, "pages_summarized")
 
 # --- LLM Configuration ---
-LM_STUDIO_BASE_URL = "http://localhost:1234/v1"
 API_KEY = "not-needed"
 SUMMARIZER_PROMPT_PATH = "prompts/document_summarizer_prompt.txt"
 MAX_CONTEXT_TOKENS = 6000
 LIST_SUMMARY_THRESHOLD = 10
 
 # --- Globals ---
-CLIENT = OpenAI(base_url=LM_STUDIO_BASE_URL, api_key=API_KEY)
+CLIENT = OpenAI(base_url=config.BASE_URL, api_key=API_KEY)
 SUMMARIZER_PROMPT_TEMPLATE = Path(SUMMARIZER_PROMPT_PATH).read_text("utf-8")
 TOKENIZER = tiktoken.get_encoding("cl100k_base")
 PROMPT_TEMPLATE_SIZE = len(TOKENIZER.encode(SUMMARIZER_PROMPT_TEMPLATE.format(task="", content="")))
@@ -65,7 +65,7 @@ def call_summarizer(content: str, task: str) -> str:
             logger.warning(f"Prompt for task {task} is too large ({prompt_tokens} tokens).")
             return ""
         response = CLIENT.chat.completions.create(
-            model="local-model",
+            model=config.SUMMARY_MODEL_NAME,
             messages=[{"role": "user", "content": formatted_prompt}],
             temperature=0.2,
         )

@@ -17,6 +17,7 @@ fastuuid==0.12.0
 filelock==3.19.1
 frozenlist==1.7.0
 fsspec==2025.7.0
+go-task-bin==3.44.1
 greenlet==3.2.4
 h11==0.16.0
 httpcore==1.0.9
