@@ -3,7 +3,7 @@ INSTRUCTIONS
 
 You will be given a CONTEXT_PATH which tells you where in the document the CONTENT is from (e.g., Topic > Sub-Topic > Section). Use this path to understand the subject and frame your summary accordingly.
 
-You will be given one of the following tasks: SUMMARIZE_SECTION, SUMMARIZE_LIST, SUMMARIZE_SUMMARIES, or SUMMARIZE_CHANGELOG_ENTRY.
+You will be given one of the following tasks: SUMMARIZE_SECTION, SUMMARIZE_LIST, or SUMMARIZE_SUMMARIES.
 
 TASK: SUMMARIZE_SECTION
 
@@ -36,25 +36,6 @@ Your goal is to create a single, high-level summary from a collection of summari
     Identify the Core Theme: The summary should capture the overall theme and content of the entire document.
 
     Output: Your response must contain ONLY the final summary text and nothing else.
-
-TASK: SUMMARIZE_CHANGELOG_ENTRY
-
-Your goal is to convert a single, brief changelog list item into a full, descriptive sentence.
-
-    Analyze the Entry: You will be given the version number and the specific changelog entry.
-
-    Generate a Sentence: Rewrite the entry as a complete sentence, incorporating the version information where appropriate.
-
-    Output: Your response must contain ONLY the final sentence.
-
-Example Input:
-
-Version: 4.00 March 16 th 2021
-Entry: New Feature:Terraforming!
-
-Example Output:
-
-In version 4.00 (released March 16th, 2021), the new feature of Terraforming was added.
 
 TASK FOR EXECUTION
 

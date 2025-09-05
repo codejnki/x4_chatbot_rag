@@ -62,7 +62,7 @@ def call_summarizer(content: str, task: str, context_path: str) -> str:
     try:
         if not content.strip():
             return ""
-        if len(content.split()) < 10 and task != "SUMMARIZE_CHANGELOG_ENTRY":
+        if len(content.split()) < 10:
              return strip_until_newline(content.strip())
 
         formatted_prompt = SUMMARIZER_PROMPT_TEMPLATE.format(task=task, content=content, context_path=context_path)
@@ -256,34 +256,28 @@ def unroll_single_table(md_content: str) -> str:
     return "".join(unrolled_content_parts)
 
 def unroll_changelog(md_content: str) -> str:
-    """Parses a changelog file and unrolls its list items into prose."""
+    """Parses a changelog file and unrolls its list items into headers without using an LLM."""
     md = MarkdownIt("gfm-like")
     tokens = md.parse(md_content)
     
     unrolled_parts = ["\n\n---\n\n## Unrolled Changelog Data"]
     current_version = ""
-    in_top_level_list = False
-    in_nested_list = False
+    list_level = 0
 
     for i, token in enumerate(tokens):
         if token.type == 'bullet_list_open':
-            in_top_level_list = not in_nested_list
-            in_nested_list = True if in_top_level_list and in_nested_list else in_nested_list
+            list_level += 1
         elif token.type == 'bullet_list_close':
-            if in_nested_list: in_nested_list = False
-            else: in_top_level_list = False
+            list_level -= 1
         elif token.type == 'list_item_open':
             item_content_token = tokens[i+2]
             if item_content_token.type == 'inline':
                 item_content = item_content_token.content.strip()
-                if in_top_level_list and not in_nested_list:
+                
+                if list_level == 1:
                     current_version = item_content
-                    unrolled_parts.append(f"\n### Version {current_version}\n")
-                elif in_nested_list and current_version:
-                    context_for_llm = f"Version: {current_version}\nEntry: {item_content}"
-                    prose_entry = call_summarizer(context_for_llm, "SUMMARIZE_CHANGELOG_ENTRY", f"Changelog > {current_version}")
-                    if prose_entry:
-                        unrolled_parts.append(f"- {prose_entry}\n")
+                elif list_level == 2 and current_version:
+                    unrolled_parts.append(f"\n### {current_version} - {item_content}\n")
 
     if len(unrolled_parts) > 1:
         return "".join(unrolled_parts)
@@ -341,3 +335,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
