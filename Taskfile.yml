@@ -14,7 +14,7 @@ vars:
   VECTOR_STORE_DIR: faiss_index
   KEYWORDS_CACHE_DIR: .keyword_cache
   
-  ALL_CHUNKS_FILE: x4_all_chunks.json
+  ALL_CHUNKS_FILE: x4_wiki_chunks.json
   KEYWORDS_FILE: x4_keywords.json
   REFINED_KEYWORDS_FILE: x4_keywords_refined.json
 

@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 # --- End Logging Configuration ---
 
 # --- Configuration ---
-CHUNKS_FILE = "x4_all_chunks.json"
+CHUNKS_FILE = "x4_wiki_chunks.json"
 VECTOR_STORE_PATH = "faiss_index"
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 

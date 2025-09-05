@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 # --- End Logging Configuration ---
 
 # --- Configuration ---
-CHUNKS_PATH = "x4_all_chunks.json"
+CHUNKS_PATH = "x4_wiki_chunks.json"
 PROMPT_PATH = "prompts/keyword_extractor_prompt.txt"
 OUTPUT_PATH = "x4_keywords.json"
 CACHE_DIR = Path(".keyword_cache")
@@ -25,7 +25,7 @@ LM_STUDIO_BASE_URL = "http://localhost:1234/v1"
 API_KEY = "not-needed"
 MODEL_NAME = "local-model"
 
-MAX_WORKERS = 8
+MAX_WORKERS = 4
 MAX_RETRIES = 3
 RETRY_DELAY_SECONDS = 2
 
