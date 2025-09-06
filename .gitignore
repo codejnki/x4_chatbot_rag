@@ -9,10 +9,14 @@ x4_wiki_chunks.json
 x4_keywords.json
 x4_keywords_refined.json
 
-failed_chunks.log
+*.log
 
-console.log
+
 test_results.md
 x4_changelog_chunks.json
 x4_all_chunks.json
 .task
+
+ssl-cert-key.pem
+ssl-cert.pem
+.continue

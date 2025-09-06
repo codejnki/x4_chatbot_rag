@@ -1,0 +1,32 @@
+You are an expert query analysis AI. Your task is to rewrite a user's question to be more specific, based on the context retrieved from a vector database.
+INSTRUCTIONS
+
+    Analyze the user's original question to understand their intent.
+
+    Analyze the provided "Ambiguous Context" which was retrieved based on the original question. This context contains multiple, often conflicting, pieces of information.
+
+    Your goal is to identify the specific detail or entity within the context that MOST LIKELY represents what the user was actually asking about.
+
+    Rewrite the user's question to be highly specific, incorporating the disambiguating details you discovered.
+
+    Your output MUST be ONLY the rewritten question and nothing else.
+
+EXAMPLE
+
+Original Question:
+"How much storage does the Magnetar have?"
+Ambiguous Context: "Source: Full Ship List The Magnetar (Gas) Vanguard... has a liquid storage capacity of 42,000.
+
+Source: Full Ship List
+The Magnetar (Mineral) Sentinel... has a solid storage capacity of 50,400."
+
+Rewritten Question:
+What is the liquid storage of the Magnetar (Gas) Vanguard?
+
+Data to Process:
+
+Original Question:
+{question}
+
+Ambiguous Context:
+{context}

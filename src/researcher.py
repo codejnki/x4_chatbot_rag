@@ -31,37 +31,40 @@ class Researcher:
                 return "NO_CLEAR_ANSWER"
         else:
             logger.info(f"Content for recursive summarization is too large. Splitting text in half.")
+            # Simple split for now, can be improved with more sophisticated chunking if needed
             mid_point = len(combined_text) // 2
             first_half = combined_text[:mid_point]
             second_half = combined_text[mid_point:]
             
+            # Recursively summarize each half
             first_half_summary = await self._recursive_summarize(question, [first_half])
             second_half_summary = await self._recursive_summarize(question, [second_half])
             
+            # Combine the summaries of the two halves
             return await self._recursive_summarize(question, [first_half_summary, second_half_summary])
 
     async def run(self, question: str, documents: List[Document]) -> Optional[str]:
         if not documents:
             return None
 
-        summaries = []
-        for i, doc in enumerate(documents):
+        # --- MODIFICATION START ---
+        # Consolidate all document content BEFORE calling the LLM.
+        # This allows the LLM to see all context at once and resolve ambiguities.
+        
+        logger.info(f"--- Consolidating {len(documents)} retrieved documents for researcher... ---")
+        
+        all_doc_content = []
+        for doc in documents:
             doc_content = f"Source: {doc.metadata.get('title', 'Unknown')}\n\n{doc.page_content}"
-            logger.info(f"--- Running Researcher on Document {i + 1}/{len(documents)} ---")
+            all_doc_content.append(doc_content)
 
-            summary = await self._recursive_summarize(question, [doc_content])
-            if "NO_CLEAR_ANSWER" not in summary and summary.strip():
-                summaries.append(summary)
+        # Perform a single, powerful synthesis call on the combined text
+        final_synthesized_context = await self._recursive_summarize(question, all_doc_content)
+        # --- MODIFICATION END ---
 
-        if not summaries:
-            logger.info("--- Researcher found no clear answer in any document. ---")
+        if not final_synthesized_context or "NO_CLEAR_ANSWER" in final_synthesized_context:
+            logger.info("--- Researcher found no clear answer in the consolidated documents. ---")
             return None
-
-        if len(summaries) > 1:
-            logger.info("--- Consolidating multiple researcher summaries ---")
-            final_synthesized_context = await self._recursive_summarize(question, summaries)
-        else:
-            final_synthesized_context = summaries[0]
 
         logger.info(f"--- Final Researcher synthesized context: ---\n{final_synthesized_context}\n--------------------")
         return final_synthesized_context

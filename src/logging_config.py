@@ -34,7 +34,5 @@ def configure_logging():
     logging.root.addHandler(file_handler)
     logging.root.addHandler(tqdm_handler)
 
-# Ensure configure_logging is called at the start of your application
-configure_logging()
 
 

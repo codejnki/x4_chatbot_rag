@@ -28,8 +28,9 @@ def load_and_chunk_documents():
         return None
 
     # Define both chunking methods
+    # Updated to split on H3 to capture individual unrolled items.
     markdown_splitter = MarkdownHeaderTextSplitter(
-        headers_to_split_on=[("#", "Header 1"), ("##", "Header 2")]
+        headers_to_split_on=[("#", "Header 1"), ("##", "Header 2"), ("###", "Header 3")]
     )
     character_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,

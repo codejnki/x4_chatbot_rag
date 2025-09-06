@@ -1,12 +1,13 @@
 # main.py
 import logging
-from logging_config import configure_logging
 
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api_routes import router as api_router
+from  logging_config import configure_logging
 
+configure_logging()
 logger = logging.getLogger(__name__)
 
 logger.debug("Logger in main.py is configured.")
@@ -28,4 +29,11 @@ app.add_middleware(
 app.include_router(api_router)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8001, log_config=None)
+    cert_file = "ssl-cert.pem"
+    key_file = "ssl-cert-key.pem"
+    logger.info("Starting the server with SSL.")
+    uvicorn.run(app, host="0.0.0.0", 
+                port=8001, 
+                log_config=None,
+                ssl_keyfile=key_file,
+                ssl_certfile=cert_file)
