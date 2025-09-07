@@ -39,7 +39,7 @@ class Section:
 API_KEY = "not-needed"
 SUMMARIZER_PROMPT_PATH = "prompts/document_summarizer_prompt.txt"
 TABLE_ROW_PROMPT_PATH = "prompts/table_row_summarizer_prompt.txt" # New prompt for table rows
-MAX_CONTEXT_TOKENS = 125000
+MAX_CONTEXT_TOKENS = 15750
 LIST_SUMMARY_THRESHOLD = 10
 
 CLIENT = OpenAI(base_url=config.BASE_URL, api_key=API_KEY)
@@ -269,12 +269,11 @@ def summarize_and_enrich_content(md_content: str, file_path_for_logging: Path) -
         for table_md in all_tables:
             unrolled_rows = unroll_single_table(table_md)
             for row_data in tqdm(unrolled_rows, desc="Synthesizing table rows"):
-                item_name = row_data.get("Ship", row_data.get("Name", None))
-                if not item_name: continue
-                
+                # item_name = row_data.get("Ship", row_data.get("Name", None))
+                # if not item_name: continue
                 prose_sentence = call_table_row_summarizer(row_data)
-                if prose_sentence:
-                    detailed_stats_parts.append(f"\n\n### {item_name}\n{prose_sentence}")
+                if prose_sentence and prose_sentence != "[NO ENTITY]":
+                    detailed_stats_parts.append(f"\n\n### {row_data}\n{prose_sentence}")
     
     detailed_stats_section = "".join(detailed_stats_parts)
     

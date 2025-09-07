@@ -20,3 +20,4 @@ x4_all_chunks.json
 ssl-cert-key.pem
 ssl-cert.pem
 .continue
+rootCA.pem

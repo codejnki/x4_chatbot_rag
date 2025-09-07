@@ -33,8 +33,8 @@ def load_and_chunk_documents():
         headers_to_split_on=[("#", "Header 1"), ("##", "Header 2"), ("###", "Header 3")]
     )
     character_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=200,
+        chunk_size=400,
+        chunk_overlap=80,
         length_function=len
     )
 

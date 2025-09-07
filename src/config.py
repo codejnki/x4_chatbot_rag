@@ -1,4 +1,4 @@
-MAX_CONTEXT_TOKENS = 125000
+MAX_CONTEXT_TOKENS = 15750
 VECTOR_STORE_PATH = "faiss_index"
 SYSTEM_PROMPT_PATH = "prompts/system_prompt.txt"
 KEYWORDS_PATH = "x4_keywords_refined.json"
